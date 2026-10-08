@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" role="img" aria-label="Game crest">
+  <defs>
+    <linearGradient id="plate" x1="26" x2="134" y1="20" y2="142" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#f7efdf"/>
+      <stop offset="1" stop-color="#b9824d"/>
+    </linearGradient>
+  </defs>
+  <path fill="#2f211b" d="M80 8 140 35v38c0 38-23 64-60 79-37-15-60-41-60-79V35L80 8Z"/>
+  <path fill="url(#plate)" d="M80 20 128 42v31c0 29-17 50-48 64-31-14-48-35-48-64V42l48-22Z"/>
+  <path fill="#5f4535" d="M82 43c-12 12-22 25-22 43 0 11 8 21 20 21 13 0 22-9 22-22 0-18-8-30-20-42Z"/>
+  <path fill="#f3eadc" d="M81 60c-6 9-10 16-10 26 0 6 4 11 10 11s11-5 11-12c0-9-5-17-11-25Z"/>
+  <path fill="#2f211b" d="M53 115h54v8H53z"/>
+</svg>

@@ -1,0 +1,49 @@
+<% content_for :title, "Игра - RPI" %>
+<% content_for :body_class, "game-page" %>
+
+<main class="game-screen" aria-label="Прототип игрового интерфейса">
+  <section class="hud hud-left" aria-label="Состояние персонажа">
+    <div class="stat-row">
+      <span>HP</span>
+      <div class="bar" aria-label="Здоровье">
+        <i style="width: 82%"></i>
+      </div>
+      <strong>82</strong>
+    </div>
+
+    <div class="stat-row">
+      <span>STA</span>
+      <div class="bar stamina" aria-label="Выносливость">
+        <i style="width: 64%"></i>
+      </div>
+      <strong>64</strong>
+    </div>
+  </section>
+
+  <nav class="hud hud-right" aria-label="Игровая навигация">
+    <button class="icon-btn" type="button" aria-label="Открыть инвентарь">Инвентарь</button>
+    <%= link_to "Профиль", profile_path, class: "icon-btn" %>
+  </nav>
+
+  <section class="scene-card" aria-label="Заглушка изображения сцены">
+    <div class="scene-plate">
+      <span>Здесь будет изображение сцены</span>
+    </div>
+  </section>
+
+  <section class="dialogue-panel" aria-label="Текст истории и ввод команды">
+    <p class="story-label">Текст истории</p>
+    <p>
+      Дорога тонет в тёплом тумане. Где-то за старыми камнями цвета кофе голос ждёт команду игрока,
+      которая позже будет отправляться в API ИИ.
+    </p>
+
+    <form class="command-form" action="#" method="post">
+      <label for="player-command">Команда игрока</label>
+      <div class="command-row">
+        <input id="player-command" type="text" placeholder="например: осмотреть ворота" autocomplete="off">
+        <button class="btn btn-primary" type="button">Отправить</button>
+      </div>
+    </form>
+  </section>
+</main>

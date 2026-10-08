@@ -1,0 +1,47 @@
+<% content_for :title, "Регистрация - RPI" %>
+<% content_for :body_class, "page-shell auth-page" %>
+
+<main class="auth-screen">
+  <section class="auth-card" aria-labelledby="registration-title">
+    <%= link_to "Назад в меню", root_path, class: "back-link" %>
+    <h1 id="registration-title">Регистрация</h1>
+    <p class="auth-copy">
+      Создайте профиль игрока. Данные сохранятся в базе, а пароль будет храниться в зашифрованном виде.
+    </p>
+
+    <% if @user.errors.any? %>
+      <div class="form-errors" role="alert">
+        <strong>Не удалось создать профиль</strong>
+        <ul>
+          <% @user.errors.full_messages.each do |message| %>
+            <li><%= message %></li>
+          <% end %>
+        </ul>
+      </div>
+    <% end %>
+
+    <%= form_with model: @user, url: register_path, class: "auth-form" do |form| %>
+      <div class="field">
+        <%= form.label :name, "Имя игрока" %>
+        <%= form.text_field :name, placeholder: "Странник", autocomplete: "name" %>
+      </div>
+
+      <div class="field">
+        <%= form.label :email, "Email" %>
+        <%= form.email_field :email, placeholder: "player@example.com", autocomplete: "email" %>
+      </div>
+
+      <div class="field">
+        <%= form.label :password, "Пароль" %>
+        <%= form.password_field :password, placeholder: "Минимум 6 символов", autocomplete: "new-password" %>
+      </div>
+
+      <div class="field">
+        <%= form.label :password_confirmation, "Повторите пароль" %>
+        <%= form.password_field :password_confirmation, placeholder: "Повторите пароль", autocomplete: "new-password" %>
+      </div>
+
+      <%= form.submit "Создать профиль", class: "btn btn-primary" %>
+    <% end %>
+  </section>
+</main>

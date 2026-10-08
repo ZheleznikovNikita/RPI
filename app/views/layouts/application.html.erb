@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title><%= content_for(:title) || "RPI" %></title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="application-name" content="RPI">
+    <meta name="mobile-web-app-capable" content="yes">
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+
+    <%= yield :head %>
+
+    <link rel="icon" href="/icon.png" type="image/png">
+    <link rel="icon" href="/icon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="/icon.png">
+
+    <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
+    <%= javascript_include_tag "ui_lab", defer: true %>
+  </head>
+
+  <body class="<%= content_for(:body_class) || "page-shell" %>" data-ui-lab="<%= content_for?(:ui_lab_enabled) ? "enabled" : "disabled" %>">
+    <% if notice.present? %>
+      <div class="flash-message flash-notice" data-flash="notice"><%= notice %></div>
+    <% end %>
+
+    <% if alert.present? %>
+      <div class="flash-message flash-alert" data-flash="alert"><%= alert %></div>
+    <% end %>
+
+    <%= yield %>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        document.querySelectorAll(".flash-message").forEach(function (element) {
+          setTimeout(function () {
+            element.style.opacity = "0";
+            element.style.transform = "translateX(-50%) translateY(-8px)";
+            setTimeout(function () {
+              element.remove();
+            }, 240);
+          }, 2000);
+        });
+      });
+    </script>
+  </body>
+</html>

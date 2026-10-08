@@ -1,0 +1,27 @@
+<% content_for :title, "Главное меню - RPI" %>
+<% content_for :body_class, "page-shell menu-page" %>
+
+<div class="top-profile-bar">
+  <%= link_to user_signed_in? ? current_user.name : "Профиль", profile_path, class: "profile-pill" %>
+</div>
+
+<main class="menu-screen">
+  <section class="brand-panel" aria-labelledby="main-title">
+    <div class="brand-mark" aria-hidden="true">
+      <%= image_tag "menu-crest.svg", alt: "" %>
+    </div>
+
+    <h1 id="main-title">RPI</h1>
+    <p class="menu-copy">
+      Веб-прототип текстовой RPG с заготовками под ИИ-рассказчика, генерацию сцен,
+      инвентарь, профиль игрока и сохранение памяти сюжета.
+    </p>
+
+    <nav class="menu-actions" aria-label="Главное меню">
+      <%= link_to "Начать игру", game_path, class: "btn btn-primary" %>
+      <%= link_to "Настройки", settings_path, class: "btn btn-secondary" %>
+      <%= link_to "Регистрация", register_path, class: "btn btn-secondary" %>
+      <%= link_to "Авторизация", login_path, class: "btn btn-ghost" %>
+    </nav>
+  </section>
+</main>

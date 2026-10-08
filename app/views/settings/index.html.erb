@@ -1,0 +1,26 @@
+<% content_for :title, "Настройки - RPI" %>
+<% content_for :body_class, "page-shell settings-page" %>
+
+<main class="settings-screen">
+  <section class="settings-panel" aria-labelledby="settings-title">
+    <%= link_to "Назад в меню", root_path, class: "back-link" %>
+    <h1 id="settings-title">Настройки</h1>
+
+    <div class="settings-grid">
+      <label class="toggle-row">
+        <span>ИИ-рассказчик</span>
+        <input type="checkbox" checked>
+      </label>
+
+      <label class="toggle-row">
+        <span>Генерация изображения сцены</span>
+        <input type="checkbox" checked>
+      </label>
+
+      <label class="toggle-row">
+        <span>Автосохранение краткого сюжета</span>
+        <input type="checkbox" checked>
+      </label>
+    </div>
+  </section>
+</main>

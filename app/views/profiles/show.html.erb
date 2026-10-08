@@ -1,0 +1,56 @@
+<% content_for :title, "Профиль - RPI" %>
+<% content_for :body_class, "page-shell profile-page" %>
+<% content_for :ui_lab_enabled, "true" %>
+
+<main class="profile-screen">
+  <section class="profile-card" aria-labelledby="profile-title">
+    <h1 id="profile-title">
+      <%= user_signed_in? ? "Профиль" : "Вход в профиль" %>
+    </h1>
+
+    <% if user_signed_in? %>
+      <p class="profile-copy">
+        Управляйте именем игрока, открывайте игру или возвращайтесь в главное меню.
+      </p>
+
+      <%= form_with model: @user, url: profile_path, method: :patch, class: "auth-form" do |form| %>
+        <% if @user.errors.any? %>
+          <div class="form-errors" role="alert">
+            <strong>Не удалось обновить профиль</strong>
+            <ul>
+              <% @user.errors.full_messages.each do |message| %>
+                <li><%= message %></li>
+              <% end %>
+            </ul>
+          </div>
+        <% end %>
+
+        <div class="field">
+          <%= form.label :name, "Имя игрока" %>
+          <%= form.text_field :name, autocomplete: "name" %>
+        </div>
+
+        <%= form.submit "Сохранить имя", class: "btn btn-primary" %>
+      <% end %>
+
+      <div class="profile-actions centered">
+        <%= link_to "Начать игру", game_path, class: "btn btn-primary" %>
+        <%= link_to "Вернуться в главное меню", root_path, class: "btn btn-secondary" %>
+      </div>
+    <% else %>
+      <p class="profile-copy">
+        Чтобы сохранить имя, прогресс и настройки, зарегистрируйтесь или войдите в аккаунт.
+      </p>
+
+      <div class="profile-actions centered">
+        <%= link_to "Регистрация", register_path, class: "btn btn-primary" %>
+        <%= link_to "Авторизация", login_path, class: "btn btn-secondary" %>
+      </div>
+
+      <div class="profile-actions compact centered">
+        <%= link_to "Начать игру", game_path, class: "btn btn-ghost" %>
+        <%= link_to "Вернуться в главное меню", root_path, class: "btn btn-ghost" %>
+      </div>
+    <% end %>
+  </section>
+</main>

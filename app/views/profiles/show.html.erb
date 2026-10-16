@@ -1,19 +1,22 @@
 <% content_for :title, "Профиль - RPI" %>
 <% content_for :body_class, "page-shell profile-page" %>
 <% content_for :ui_lab_enabled, "true" %>
+<% content_for :head do %>
+  <%= javascript_include_tag "profile", defer: true %>
+<% end %>
 
 <main class="profile-screen">
   <section class="profile-card" aria-labelledby="profile-title">
+    <% from_game = profile_navigation_options[:from] == "game" %>
+    <%= back_arrow_to(from_game ? game_path : root_path, label: from_game ? "Назад в игру" : "В главное меню") %>
     <h1 id="profile-title">
       <%= user_signed_in? ? "Профиль" : "Вход в профиль" %>
     </h1>
 
     <% if user_signed_in? %>
-      <p class="profile-copy">
-        Управляйте именем игрока, открывайте игру или возвращайтесь в главное меню.
-      </p>
+      <p class="session-status" role="status">Вы вошли как <strong><%= current_user.name %></strong></p>
 
-      <%= form_with model: @user, url: profile_path, method: :patch, class: "auth-form" do |form| %>
+      <%= form_with model: @user, url: profile_path(profile_navigation_options), method: :patch, class: "auth-form" do |form| %>
         <% if @user.errors.any? %>
           <div class="form-errors" role="alert">
             <strong>Не удалось обновить профиль</strong>
@@ -34,23 +37,34 @@
       <% end %>
 
       <div class="profile-actions centered">
-        <%= link_to "Начать игру", game_path, class: "btn btn-primary" %>
-        <%= link_to "Вернуться в главное меню", root_path, class: "btn btn-secondary" %>
+        <%= button_to "Выйти из аккаунта", logout_path, method: :delete, class: "btn btn-ghost", form: { data: { confirm_logout: "Выйти из аккаунта?" } } %>
       </div>
     <% else %>
+      <p class="session-status" role="status">Вы не вошли в аккаунт</p>
       <p class="profile-copy">
         Чтобы сохранить имя, прогресс и настройки, зарегистрируйтесь или войдите в аккаунт.
       </p>
 
       <div class="profile-actions centered">
-        <%= link_to "Регистрация", register_path, class: "btn btn-primary" %>
-        <%= link_to "Авторизация", login_path, class: "btn btn-secondary" %>
+        <%= link_to "Регистрация", register_path(profile_navigation_options), class: "btn btn-primary" %>
+        <%= link_to "Авторизация", login_path(profile_navigation_options), class: "btn btn-secondary" %>
       </div>
 
-      <div class="profile-actions compact centered">
-        <%= link_to "Начать игру", game_path, class: "btn btn-ghost" %>
-        <%= link_to "Вернуться в главное меню", root_path, class: "btn btn-ghost" %>
-      </div>
     <% end %>
   </section>
 </main>
+
+<% if user_signed_in? %>
+  <dialog id="logout-confirmation" class="logout-dialog" aria-labelledby="logout-title" aria-describedby="logout-description">
+    <h2 id="logout-title">Выйти из аккаунта?</h2>
+    <p id="logout-description">Чтобы снова открыть профиль, потребуется войти в аккаунт.</p>
+    <div class="logout-dialog-actions">
+      <button type="button" class="btn btn-secondary" data-cancel-logout autofocus>Отмена</button>
+      <button type="button" class="btn btn-primary" data-confirm-logout-button>Выйти</button>
+    </div>
+  </dialog>
+<% end %>
+
+<aside class="profile-tools" aria-label="Инструменты интерфейса" data-ui-lab-container>
+  <%= link_to "UI Kit", ui_kit_path(profile_navigation_options), class: "ui-kit-link" %>
+</aside>

@@ -33,29 +33,29 @@ class PrototypePagesTest < ActionDispatch::IntegrationTest
         user: {
           name: "Тестовый игрок",
           email: "Player@Example.com",
-          password: "secret123",
-          password_confirmation: "secret123"
+          password: "Lantern!Orbit7Cedar",
+          password_confirmation: "Lantern!Orbit7Cedar"
         }
       }
     end
 
     user = User.last
     assert_equal "player@example.com", user.email
-    assert_not_equal "secret123", user.password_digest
+    assert_not_equal "Lantern!Orbit7Cedar", user.password_digest
     assert_redirected_to profile_path
     assert_equal user.id, session[:user_id]
   end
 
   test "registration rejects duplicated email" do
-    User.create!(name: "Первый", email: "dupe@example.com", password: "secret123")
+    User.create!(name: "Первый", email: "dupe@example.com", password: "Lantern!Orbit7Cedar", password_confirmation: "Lantern!Orbit7Cedar")
 
     assert_no_difference("User.count") do
       post register_path, params: {
         user: {
           name: "Второй",
           email: "DUPE@example.com",
-          password: "secret123",
-          password_confirmation: "secret123"
+          password: "Lantern!Orbit7Cedar",
+          password_confirmation: "Lantern!Orbit7Cedar"
         }
       }
     end
@@ -65,9 +65,9 @@ class PrototypePagesTest < ActionDispatch::IntegrationTest
   end
 
   test "registered user can log in" do
-    user = User.create!(name: "Игрок", email: "login@example.com", password: "secret123")
+    user = User.create!(name: "Игрок", email: "login@example.com", password: "Lantern!Orbit7Cedar", password_confirmation: "Lantern!Orbit7Cedar")
 
-    post login_path, params: { email: "login@example.com", password: "secret123" }
+    post login_path, params: { email: "login@example.com", password: "Lantern!Orbit7Cedar" }
 
     assert_redirected_to profile_path
     assert_equal user.id, session[:user_id]

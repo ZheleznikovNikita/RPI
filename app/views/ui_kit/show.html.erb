@@ -1,0 +1,50 @@
+<% content_for :title, "UI Kit - RPI" %>
+<% content_for :ui_lab_enabled, "true" %>
+<main class="kit-screen">
+  <header class="kit-header">
+    <%= back_arrow_to profile_path(profile_navigation_options), label: "Назад в профиль" %>
+    <h1>RPI UI Kit</h1>
+    <nav aria-label="Разделы UI Kit"><a href="#actions">Действия</a><a href="#forms">Формы</a><a href="#game">Игра</a></nav>
+  </header>
+  <section class="kit-section" id="actions">
+    <h2>Действия и состояния</h2>
+    <div class="kit-row">
+      <%= link_to "Начать игру", game_path, class: "btn btn-primary" %>
+      <%= link_to "Профиль", profile_path, class: "btn btn-secondary" %>
+      <%= link_to "Настройки", settings_path, class: "btn btn-ghost" %>
+      <button type="button" class="btn btn-secondary" disabled>Загрузка…</button>
+    </div>
+    <div class="kit-row kit-swatches" aria-label="Палитра">
+      <span style="--swatch: var(--milk)">Фон</span><span style="--swatch: var(--coffee)">Текст</span>
+      <span style="--swatch: var(--espresso)">Основное действие</span><span style="--swatch: var(--moss)">Выносливость</span><span style="--swatch: var(--ruby)">Здоровье</span>
+    </div>
+    <p class="kit-notice" role="status">Прогресс сохранён.</p>
+    <p class="form-errors" role="alert">Не удалось продолжить историю. Попробуйте ещё раз.</p>
+  </section>
+  <section class="kit-section" id="forms">
+    <h2>Профиль и настройки</h2>
+    <div class="kit-columns">
+      <div class="field"><label for="kit-name">Имя персонажа</label><input id="kit-name" type="text" placeholder="Странник" maxlength="40"><small>До 40 символов</small></div>
+      <div class="field"><label for="kit-email">Email</label><input id="kit-email" type="email" value="player@" aria-invalid="true" aria-describedby="kit-email-error"><small id="kit-email-error" class="field-error">Введите полный адрес электронной почты</small></div>
+      <label class="toggle-row"><span>Звуки окружения</span><input type="checkbox" checked></label>
+      <div class="field"><label for="kit-font">Размер текста</label><input id="kit-font" type="range" min="14" max="24" value="18"></div>
+    </div>
+  </section>
+  <section class="kit-section" id="game">
+    <h2>Персонаж и история</h2>
+    <div class="kit-columns">
+      <div class="kit-stats">
+        <label for="kit-health">Здоровье · 82 / 100</label><progress id="kit-health" value="82" max="100">82%</progress>
+        <label for="kit-stamina">Выносливость · 64 / 100</label><progress id="kit-stamina" class="stamina" value="64" max="100">64%</progress>
+      </div>
+      <article class="inventory-item">
+        <%= image_tag "menu-crest.svg", alt: "Герб на обложке дневника", width: 64, height: 64 %>
+        <div><h3>Дорожный дневник</h3><p>Записи о пройденном пути</p><span>Предмет · 1 шт.</span></div>
+      </article>
+    </div>
+    <div class="kit-dialogue">
+      <p class="story-label">У старых ворот</p><p>Вы находите дневник у каменной арки. Между страницами лежит карта с отмеченной тропой.</p>
+      <div class="command-form"><label for="kit-command">Ваше действие</label><div class="command-row"><input id="kit-command" type="text" placeholder="Осмотреть карту"><button class="btn btn-primary" type="button" disabled>Отправить</button></div></div>
+    </div>
+  </section>
+</main>

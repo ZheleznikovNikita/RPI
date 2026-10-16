@@ -9,7 +9,7 @@ class RegistrationsController < ApplicationController
     if @user.save
       reset_session
       session[:user_id] = @user.id
-      redirect_to profile_path, notice: "Регистрация завершена. Добро пожаловать, #{@user.name}!"
+      redirect_to profile_path(profile_navigation_options), notice: "Регистрация завершена. Добро пожаловать, #{@user.name}!"
     else
       render :new, status: :unprocessable_entity
     end

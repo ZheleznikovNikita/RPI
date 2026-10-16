@@ -95,10 +95,15 @@
       saveSettings(settings);
       applySettings(settings);
       panel.remove();
-      document.body.appendChild(buildPanel(settings));
+      appendPanel(settings);
     });
 
     return panel;
+  }
+
+  function appendPanel(settings) {
+    var container = document.querySelector("[data-ui-lab-container]") || document.body;
+    container.appendChild(buildPanel(settings));
   }
 
   document.addEventListener("DOMContentLoaded", function () {
@@ -108,6 +113,6 @@
 
     var settings = loadSettings();
     applySettings(settings);
-    document.body.appendChild(buildPanel(settings));
+    appendPanel(settings);
   });
 })();

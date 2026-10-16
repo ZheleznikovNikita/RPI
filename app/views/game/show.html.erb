@@ -22,7 +22,8 @@
 
   <nav class="hud hud-right" aria-label="Игровая навигация">
     <button class="icon-btn" type="button" aria-label="Открыть инвентарь">Инвентарь</button>
-    <%= link_to "Профиль", profile_path, class: "icon-btn" %>
+    <%= link_to "Профиль", profile_path(from: "game"), class: "icon-btn" %>
+    <%= link_to "В меню", root_path, class: "icon-btn", aria: { label: "В главное меню" } %>
   </nav>
 
   <section class="scene-card" aria-label="Заглушка изображения сцены">

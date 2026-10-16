@@ -1,0 +1,27 @@
+ru:
+  activerecord:
+    attributes:
+      user:
+        name: Имя
+        email: Email
+        password: Пароль
+        password_confirmation: Подтверждение пароля
+    errors:
+      messages:
+        record_invalid: "Ошибка сохранения: %{errors}"
+  errors:
+    format: "%{attribute}: %{message}"
+    messages:
+      blank: не может быть пустым
+      taken: уже используется
+      invalid: имеет неверный формат
+      confirmation: "не совпадает с полем «%{attribute}»"
+      too_short: "должно содержать не менее %{count} символов"
+      too_long: "должно содержать не более %{count} символов"
+      password_too_long: должен занимать не более 72 байт
+      too_weak: слишком предсказуемый. Выберите более длинную и необычную фразу
+      inclusion: имеет недопустимое значение
+      not_a_number: должно быть числом
+      not_an_integer: должно быть целым числом
+      greater_than_or_equal_to: "должно быть не меньше %{count}"
+      less_than_or_equal_to: "должно быть не больше %{count}"

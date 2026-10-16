@@ -3,13 +3,13 @@
 
 <main class="auth-screen">
   <section class="auth-card" aria-labelledby="auth-title">
-    <%= link_to "Назад в меню", root_path, class: "back-link" %>
+    <%= back_arrow_to root_path, label: "В главное меню" %>
     <h1 id="auth-title">Авторизация</h1>
     <p class="auth-copy">
       Войдите в профиль игрока, чтобы продолжить будущие сохранения и историю персонажа.
     </p>
 
-    <%= form_with url: login_path, class: "auth-form" do |form| %>
+    <%= form_with url: login_path(profile_navigation_options), class: "auth-form" do |form| %>
       <div class="field">
         <%= form.label :email, "Email" %>
         <%= form.email_field :email, value: @email, placeholder: "player@example.com", autocomplete: "email" %>
@@ -24,7 +24,7 @@
     <% end %>
 
     <p class="auth-switch">
-      Профиля ещё нет? <%= link_to "Создать", register_path %>
+      Профиля ещё нет? <%= link_to "Создать", register_path(profile_navigation_options) %>
     </p>
   </section>
 </main>

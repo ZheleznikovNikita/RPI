@@ -1,22 +1,22 @@
 class StoryTurn < ApplicationRecord
-  belongs_to :adventure
+  belongs_to :player_action
+  belongs_to :ai_request
+  has_one :game_session, through: :player_action
 
-  validates :command, presence: true, length: { maximum: 2_000 }
-  validates :position, numericality: { only_integer: true, greater_than: 0 }, uniqueness: { scope: :adventure_id }
-  validate :response_contract
-
-  def narration
-    response.is_a?(Hash) ? response["narration"] : nil
-  end
+  validates :player_action_id, :ai_request_id, uniqueness: true
+  validates :narration, presence: true, length: { maximum: 20_000 }
+  validate :successful_narration_request
 
   private
 
-  def response_contract
-    unless response.is_a?(Hash) && %w[narration summary].all? { |key| response[key].is_a?(String) && response[key].present? }
-      errors.add(:response, "должен содержать строки narration и summary")
-      return
-    end
+  def successful_narration_request
+    return unless ai_request
 
-    errors.add(:response, "превышает допустимую длину текста") if response["narration"].length > 20_000 || response["summary"].length > 20_000
+    unless ai_request.player_action_id == player_action_id && ai_request.purpose_narration? && ai_request.succeeded?
+      errors.add(:ai_request, "должен быть успешным запросом рассказчика для этого действия")
+    end
+    if ai_request.response_payload.is_a?(Hash) && narration != ai_request.response_payload["narration"]
+      errors.add(:narration, "должно совпадать с принятым ответом рассказчика")
+    end
   end
 end

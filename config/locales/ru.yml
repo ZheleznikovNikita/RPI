@@ -6,6 +6,32 @@ ru:
         email: Email
         password: Пароль
         password_confirmation: Подтверждение пароля
+      game_session:
+        title: Название
+        health: Здоровье
+        stamina: Выносливость
+        user_id: Пользователь
+        completed_at: Дата завершения
+      player_action:
+        command: Действие
+        position: Номер действия
+        game_session_id: Игровая сессия
+      inventory_item:
+        code: Код предмета
+        name: Название предмета
+        description: Описание
+        quantity: Количество
+      story_summary:
+        content: Саммэри
+        version: Версия
+      story_turn:
+        narration: Текст истории
+      ai_request:
+        provider: Провайдер
+        model_identifier: Модель ИИ
+        request_payload: Тело запроса
+        response_payload: Ответ ИИ
+        error_message: Описание ошибки
     errors:
       messages:
         record_invalid: "Ошибка сохранения: %{errors}"
@@ -23,5 +49,6 @@ ru:
       inclusion: имеет недопустимое значение
       not_a_number: должно быть числом
       not_an_integer: должно быть целым числом
+      greater_than: "должно быть больше %{count}"
       greater_than_or_equal_to: "должно быть не меньше %{count}"
       less_than_or_equal_to: "должно быть не больше %{count}"

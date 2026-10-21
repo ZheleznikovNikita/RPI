@@ -1,5 +1,8 @@
 <% content_for :title, "Игра - RPI" %>
 <% content_for :body_class, "game-page" %>
+<% content_for :head do %>
+  <%= javascript_include_tag "inventory", defer: true %>
+<% end %>
 
 <main class="game-screen" aria-label="Прототип игрового интерфейса">
   <section class="hud hud-left" aria-label="Состояние персонажа">
@@ -21,7 +24,7 @@
   </section>
 
   <nav class="hud hud-right" aria-label="Игровая навигация">
-    <button class="icon-btn" type="button" aria-label="Открыть инвентарь">Инвентарь</button>
+    <button class="icon-btn" type="button" aria-label="Открыть инвентарь" aria-haspopup="dialog" aria-controls="inventory-dialog" aria-expanded="false" data-open-inventory>Инвентарь</button>
     <%= link_to "Профиль", profile_path(from: "game"), class: "icon-btn" %>
     <%= link_to "В меню", root_path, class: "icon-btn", aria: { label: "В главное меню" } %>
   </nav>
@@ -48,3 +51,17 @@
     </form>
   </section>
 </main>
+
+<dialog id="inventory-dialog" class="inventory-dialog" aria-labelledby="inventory-title">
+  <header class="inventory-header">
+    <h2 id="inventory-title">Инвентарь</h2>
+    <button class="inventory-close" type="button" aria-label="Закрыть инвентарь" title="Закрыть инвентарь" data-close-inventory autofocus>
+      <span aria-hidden="true">&times;</span>
+    </button>
+  </header>
+  <div class="inventory-grid" role="list" aria-label="Слоты инвентаря">
+    <% 9.times do |index| %>
+      <div class="inventory-slot" role="listitem" aria-label="Пустой слот <%= index + 1 %>"></div>
+    <% end %>
+  </div>
+</dialog>

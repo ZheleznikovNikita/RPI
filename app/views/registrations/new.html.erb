@@ -33,8 +33,7 @@
 
       <div class="field">
         <%= form.label :password, "Пароль" %>
-        <%= form.password_field :password, autocomplete: "new-password", required: true, minlength: 12, aria: { describedby: "password-help" } %>
-        <small id="password-help">От 12 символов, не более 72 байт. Используйте длинную фразу из несвязанных слов. Избегайте имени, email и предсказуемых сочетаний.</small>
+        <%= form.password_field :password, placeholder: "Пароль", autocomplete: "new-password", required: true, minlength: 12 %>
       </div>
 
       <div class="field">

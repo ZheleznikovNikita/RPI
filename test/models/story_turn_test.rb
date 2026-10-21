@@ -2,38 +2,44 @@ require "test_helper"
 
 class StoryTurnTest < ActiveSupport::TestCase
   setup do
-    user = User.create!(name: "Игрок", email: "turn@example.com", password: "Lantern!Orbit7Cedar", password_confirmation: "Lantern!Orbit7Cedar")
-    @adventure = user.start_adventure!(title: "Тропа")
-    @turn = @adventure.story_turns.build(position: 1, command: "Осмотреться", response: { "narration" => "Вы у ворот", "summary" => "Герой у ворот" })
+    @action = create_game_session.submit_action!(command: "Осмотреться")
+    @request = successful_request(@action)
+    @turn = @action.build_story_turn(ai_request: @request, narration: "Вы нашли тропу")
   end
 
-  # Response contract and presentation
-  test "reads narration from persisted JSON" do
+  test "stores narrative linked to its action request and session" do
     @turn.save!
-    assert_equal "Вы у ворот", @turn.reload.narration
-    assert_kind_of Hash, @turn.response
+    assert_equal "Вы нашли тропу", @turn.reload.narration
+    assert_equal @action.game_session, @turn.game_session
+    assert_equal @request, @turn.ai_request
   end
 
-  test "rejects non object responses missing fields and oversized memory" do
-    [ nil, [], "text", {}, { "narration" => 5, "summary" => "x" }, { "narration" => "x", "summary" => " " }, { "narration" => "x", "summary" => "x" * 20_001 } ].each do |response|
-      @turn.response = response
+  test "requires nonempty bounded narration" do
+    [ nil, " ", "x" * 20_001 ].each do |narration|
+      @turn.narration = narration
       assert_not @turn.valid?
-      assert @turn.errors[:response].any?
+      assert @turn.errors[:narration].any?
     end
   end
 
-  # Command and ordering
-  test "requires an adventure command and positive integer position" do
-    @turn.assign_attributes(adventure: nil, command: "", position: 0)
+  test "rejects a request belonging to another action" do
+    @turn.ai_request = successful_request(create_game_session.submit_action!(command: "Идти"))
     assert_not @turn.valid?
-    %i[adventure command position].each { |field| assert @turn.errors[field].any? }
+    assert @turn.errors[:ai_request].any?
   end
 
-  test "positions are unique within an adventure but may repeat in another" do
+  test "narration must match the accepted request response" do
+    @turn.narration = "Подменённый текст"
+    assert_not @turn.valid?
+    assert @turn.errors[:narration].any?
+  end
+
+  test "only one turn can be applied to an action and a request" do
     @turn.save!
     duplicate = @turn.dup
     assert_not duplicate.valid?
-    duplicate.adventure = @adventure.user.start_adventure!(title: "Другой путь")
-    assert duplicate.valid?
+    assert duplicate.errors[:player_action_id].any?
+    assert duplicate.errors[:ai_request_id].any?
+    assert_raises(ActiveRecord::DeleteRestrictionError) { @request.destroy! }
   end
 end

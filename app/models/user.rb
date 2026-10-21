@@ -1,6 +1,7 @@
 class User < ApplicationRecord
   has_secure_password
-  has_many :adventures, dependent: :destroy
+  has_many :game_sessions, dependent: :destroy
+  has_one :active_game_session, -> { active }, class_name: "GameSession"
 
   before_validation :normalize_email
 
@@ -12,8 +13,19 @@ class User < ApplicationRecord
   validates :password_confirmation, presence: true, if: -> { password.present? }
   validate :password_strength, if: -> { password.present? }
 
-  def start_adventure!(title:)
-    adventures.create!(title: title)
+  def start_game_session!(title:)
+    with_lock do
+      game_sessions.active.each(&:destroy!)
+      game_sessions.create!(title: title)
+    end
+  end
+
+  def delete_game_session!(game_session)
+    with_lock { game_sessions.find(game_session.id).destroy! }
+  end
+
+  def recent_game_sessions
+    game_sessions.completed.order(completed_at: :desc, id: :desc).limit(10)
   end
 
   private

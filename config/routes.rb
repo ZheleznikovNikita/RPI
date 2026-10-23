@@ -10,6 +10,7 @@ Rails.application.routes.draw do
   post "register", to: "registrations#create"
   get "profile", to: "profiles#show", as: :profile
   patch "profile", to: "profiles#update"
+  get "statistics", to: "statistics#index", as: :statistics
   get "settings", to: "settings#index"
 
   get "up" => "rails/health#show", as: :rails_health_check

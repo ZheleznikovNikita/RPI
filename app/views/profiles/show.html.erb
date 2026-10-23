@@ -8,7 +8,12 @@
 <main class="profile-screen">
   <section class="profile-card" aria-labelledby="profile-title">
     <% from_game = profile_navigation_options[:from] == "game" %>
-    <%= back_arrow_to(from_game ? game_path : root_path, label: from_game ? "Назад в игру" : "В главное меню") %>
+    <header class="profile-card-header">
+      <%= back_arrow_to(from_game ? game_path : root_path, label: from_game ? "Назад в игру" : "В главное меню") %>
+      <% if user_signed_in? %>
+        <%= button_to "Выйти", logout_path, method: :delete, class: "profile-logout", aria: { label: "Выйти из аккаунта" }, title: "Выйти из аккаунта", form: { data: { confirm_logout: "Выйти из аккаунта?" } } %>
+      <% end %>
+    </header>
     <h1 id="profile-title">
       <%= user_signed_in? ? "Профиль" : "Вход в профиль" %>
     </h1>
@@ -36,8 +41,8 @@
         <%= form.submit "Сохранить имя", class: "btn btn-primary" %>
       <% end %>
 
-      <div class="profile-actions centered">
-        <%= button_to "Выйти из аккаунта", logout_path, method: :delete, class: "btn btn-ghost", form: { data: { confirm_logout: "Выйти из аккаунта?" } } %>
+      <div class="profile-statistics">
+        <%= link_to "Статистика", statistics_path(profile_navigation_options), class: "btn btn-secondary" %>
       </div>
     <% else %>
       <p class="session-status" role="status">Вы не вошли в аккаунт</p>

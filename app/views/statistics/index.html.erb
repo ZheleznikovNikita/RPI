@@ -1,0 +1,37 @@
+<% content_for :title, "Статистика - RPI" %>
+<% content_for :body_class, "page-shell statistics-page" %>
+
+<main class="statistics-screen">
+  <%= back_arrow_to profile_path(profile_navigation_options), label: "Назад в профиль" %>
+  <header class="statistics-header">
+    <h1>Статистика</h1>
+    <p>Последние 10 завершённых прохождений</p>
+  </header>
+
+  <% if @game_sessions.empty? %>
+    <section class="statistics-empty" aria-labelledby="statistics-empty-title">
+      <%= image_tag "menu-crest.svg", alt: "", width: 72, height: 72 %>
+      <h2 id="statistics-empty-title">Завершённых прохождений пока нет</h2>
+      <p>Здесь появятся результаты ваших игр.</p>
+    </section>
+  <% else %>
+    <ol class="statistics-list" aria-label="Результаты прохождений">
+      <% @game_sessions.each do |game| %>
+        <li class="statistics-row">
+          <div class="statistics-game">
+            <h2><%= game.title %></h2>
+            <p>
+              Завершено
+              <time datetime="<%= game.completed_at.iso8601 %>"><%= game.completed_at.in_time_zone("Europe/Moscow").strftime("%d.%m.%Y, %H:%M") %> МСК</time>
+            </p>
+          </div>
+          <dl class="statistics-metrics">
+            <div><dt>Действия</dt><dd><%= @action_counts.fetch(game.id, 0) %></dd></div>
+            <div><dt>Здоровье</dt><dd><%= game.health %><span> / 100</span></dd></div>
+            <div><dt>Выносливость</dt><dd><%= game.stamina %><span> / 100</span></dd></div>
+          </dl>
+        </li>
+      <% end %>
+    </ol>
+  <% end %>
+</main>

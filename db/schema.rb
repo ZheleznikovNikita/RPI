@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_21_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_28_130000) do
   create_table "ai_requests", force: :cascade do |t|
     t.integer "player_action_id", null: false
     t.string "purpose", null: false
@@ -82,25 +82,23 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_21_120000) do
 
   create_table "story_summaries", force: :cascade do |t|
     t.integer "game_session_id", null: false
-    t.integer "player_action_id"
     t.integer "version", null: false
     t.text "content", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.integer "through_position", default: 0, null: false
     t.index ["game_session_id", "version"], name: "index_story_summaries_on_game_session_id_and_version", unique: true
     t.index ["game_session_id"], name: "index_story_summaries_on_game_session_id"
-    t.index ["player_action_id"], name: "index_story_summaries_on_player_action_id"
+    t.check_constraint "through_position >= 0", name: "story_summaries_through_position_nonnegative"
     t.check_constraint "version > 0", name: "story_summaries_version_positive"
   end
 
   create_table "story_turns", force: :cascade do |t|
-    t.integer "player_action_id", null: false
     t.integer "ai_request_id", null: false
     t.text "narration", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["ai_request_id"], name: "index_story_turns_on_ai_request_id", unique: true
-    t.index ["player_action_id"], name: "index_story_turns_on_player_action_id", unique: true
   end
 
   create_table "users", force: :cascade do |t|
@@ -118,7 +116,5 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_21_120000) do
   add_foreign_key "inventory_items", "inventories"
   add_foreign_key "player_actions", "game_sessions"
   add_foreign_key "story_summaries", "game_sessions"
-  add_foreign_key "story_summaries", "player_actions"
   add_foreign_key "story_turns", "ai_requests"
-  add_foreign_key "story_turns", "player_actions"
 end

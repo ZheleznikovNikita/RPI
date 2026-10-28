@@ -3,8 +3,8 @@ class GameSession < ApplicationRecord
   has_one :inventory, dependent: :destroy
   has_many :story_summaries, dependent: :destroy
   has_many :player_actions, -> { order(:position) }, dependent: :destroy
-  has_many :story_turns, through: :player_actions
   has_many :ai_requests, through: :player_actions
+  has_many :story_turns, through: :ai_requests
 
   after_create :create_inventory!
 
@@ -33,16 +33,18 @@ class GameSession < ApplicationRecord
     end
   end
 
-  def add_summary!(content:, player_action: nil)
+  def add_summary!(content:, through_position: nil)
     with_lock do
       ensure_active!
-      action = player_actions.find(player_action.id) if player_action
+      position = through_position.nil? ? (player_actions.completed.maximum(:position) || 0) : through_position
+      record = story_summaries.build(content: content, through_position: position, version: (story_summaries.maximum(:version) || 0) + 1)
       previous = latest_summary
-      if previous && (action&.position || 0) < (previous.player_action&.position || 0)
+      if previous && record.through_position && record.through_position < previous.through_position
         errors.add(:base, "Нельзя заменить память сюжета саммэри более раннего действия")
         raise ActiveRecord::RecordInvalid, self
       end
-      story_summaries.create!(content: content, player_action: action, version: (story_summaries.maximum(:version) || 0) + 1)
+      record.save!
+      record
     end
   end
 

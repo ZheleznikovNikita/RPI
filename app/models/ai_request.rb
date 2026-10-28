@@ -1,6 +1,6 @@
 class AiRequest < ApplicationRecord
   belongs_to :player_action
-  has_one :story_turn, dependent: :restrict_with_exception
+  has_one :story_turn, dependent: :destroy
   has_one :game_session, through: :player_action
 
   enum :purpose, { narration: "narration", summary: "summary", image: "image" }, prefix: true, validate: true

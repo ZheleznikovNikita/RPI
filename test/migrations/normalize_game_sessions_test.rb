@@ -3,7 +3,7 @@ require "open3"
 require "tmpdir"
 
 class NormalizeGameSessionsTest < ActiveSupport::TestCase
-  test "legacy data survives normalization and failed imports roll back" do
+  test "legacy data survives normalization cycle removal and rollback guards" do
     Dir.mktmpdir("rpi-legacy-") do |directory|
       database = File.join(directory, "legacy.sqlite3").tr("\\", "/")
       stdout, stderr, status = Open3.capture3(

@@ -68,7 +68,7 @@ erDiagram
     INVENTORY ||--o{ INVENTORY_ITEM : stores
     GAME_SESSION ||--o{ PLAYER_ACTION : receives
     PLAYER_ACTION ||--o{ AI_REQUEST : attempts
-    PLAYER_ACTION ||--o| STORY_TURN : produces
+    AI_REQUEST ||--o| STORY_TURN : supplies
     GAME_SESSION ||--o{ STORY_SUMMARY : remembers
 ```
 
@@ -81,6 +81,8 @@ erDiagram
 | `AiRequest` | Провайдер, модель, запрос/ответ, статус, ошибка и время отдельной попытки ИИ. |
 | `StoryTurn` | Принятый рассказ, связанный с успешным запросом того же действия. |
 | `StorySummary` | Версия краткой памяти сюжета, принадлежащая сессии. |
+
+Связи БД образуют дерево без циклов: саммэри принадлежит только сессии, а принятый ход — только запросу ИИ. Действие и сессия хода доступны через запрос. Саммэри хранит числовую границу охваченной истории `through_position` и может существовать до первого действия. Обоснование связей и ограничения приведены в [описании модели данных](docs/data_model.md#связи-без-циклов).
 
 `User#start_game_session!` создаёт сессию с инвентарём и удаляет прежнюю незавершённую в одной транзакции. Завершённые прохождения остаются в истории. `GameSession#submit_action!` сохраняет ввод игрока, а `PlayerAction#complete!` атомарно применяет успешный ответ и добавляет саммэри. `Inventory#add_item!` и `remove_item!` управляют предметами. `GameSession#finish!` фиксирует завершение.
 
@@ -184,6 +186,7 @@ RPI/
 | [Миграция пользователей](db/migrate/20261008170000_create_users.rb) | Таблица пользователей и уникальный индекс email. |
 | [Миграция истории](db/migrate/20261016090000_create_adventures_and_story_turns.rb) | Таблицы приключений и ходов, связи, индексы и ограничения. |
 | [Нормализация сессий](db/migrate/20261021120000_normalize_game_sessions.rb) | Перенос прежней структуры в новые связанные модели без потери старых ответов. |
+| [Устранение циклов связей](db/migrate/20261028130000_remove_story_relationship_cycles.rb) | Удаление лишних внешних ключей с сохранением истории и границ саммэри. |
 | [schema.rb](db/schema.rb) | Автоматически сформированная схема базы. |
 | [application_controller.rb](app/controllers/application_controller.rb) | Текущий пользователь и разрешённый контекст возврата в игру. |
 | [registrations_controller.rb](app/controllers/registrations_controller.rb) | Создание аккаунта и вход после регистрации. |
@@ -203,6 +206,7 @@ RPI/
 | [inventory_test.rb](test/models/inventory_test.rb), [inventory_item_test.rb](test/models/inventory_item_test.rb) | Количество, валидации, ограничения БД и изоляция предметов. |
 | [player_action_test.rb](test/models/player_action_test.rb), [ai_request_test.rb](test/models/ai_request_test.rb) | Переходы состояний, повторы, ошибки и применение ответа одной транзакцией. |
 | [story_turn_test.rb](test/models/story_turn_test.rb), [story_summary_test.rb](test/models/story_summary_test.rb) | Принадлежность данных, версии памяти и источники рассказа. |
+| [data_relationships_test.rb](test/models/data_relationships_test.rb) | Проверка отсутствия циклов в реальных внешних ключах БД. |
 | [normalize_game_sessions_test.rb](test/migrations/normalize_game_sessions_test.rb) | Перенос старой базы и откат ошибок на изолированной временной SQLite-базе. |
 | [authentication_test.rb](test/integration/authentication_test.rb) | Вход, выход, сессия, доступ и редактирование профиля. |
 | [navigation_test.rb](test/integration/navigation_test.rb) | Стрелки и сохранение маршрута возврата, включая регистрацию. |

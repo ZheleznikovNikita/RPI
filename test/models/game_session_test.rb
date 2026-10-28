@@ -32,7 +32,7 @@ class GameSessionTest < ActiveSupport::TestCase
     second = complete_action(@game, summary: "Герой в лесу")
     assert_equal [ 1, 2 ], @game.player_actions.pluck(:position)
     assert_equal [ "Герой у ворот", "Герой в лесу" ], @game.story_summaries.order(:version).pluck(:content)
-    assert_equal second, @game.latest_summary.player_action
+    assert_equal second.position, @game.latest_summary.through_position
     assert_equal "Герой в лесу", @game.summary
     assert_equal [ first.story_turn, second.story_turn ], @game.story_turns.to_a
   end
@@ -45,21 +45,28 @@ class GameSessionTest < ActiveSupport::TestCase
     assert_equal "Первая память", @game.summary
   end
 
-  test "summary cannot regress to an earlier action or another session" do
+  test "summary cannot regress to an earlier history boundary" do
     first = complete_action(@game)
     complete_action(@game)
-    foreign = complete_action(create_game_session)
     assert_no_difference "StorySummary.count" do
-      assert_raises(ActiveRecord::RecordInvalid) { @game.add_summary!(content: "Старое", player_action: first) }
-      assert_raises(ActiveRecord::RecordNotFound) { @game.add_summary!(content: "Чужое", player_action: foreign) }
+      assert_raises(ActiveRecord::RecordInvalid) { @game.add_summary!(content: "Старое", through_position: first.position) }
+      assert_raises(ActiveRecord::RecordInvalid) { @game.add_summary!(content: "Старое", through_position: first.position.to_s) }
+      assert_raises(ActiveRecord::RecordInvalid) { @game.add_summary!(content: "Предыстория", through_position: 0) }
     end
   end
 
   test "initial memory can exist before the first action" do
     memory = @game.add_summary!(content: "Предыстория")
-    assert_nil memory.player_action
+    assert_equal 0, memory.through_position
     assert_equal 1, memory.version
     assert_equal "Предыстория", @game.summary
+  end
+
+  test "summary without an explicit boundary covers the latest completed action" do
+    completed = complete_action(@game)
+    @game.submit_action!(command: "Ещё не обработано")
+    summary = @game.add_summary!(content: "Уточнённая память")
+    assert_equal completed.position, summary.through_position
   end
 
   test "finishing records completion and disallows further mutations" do

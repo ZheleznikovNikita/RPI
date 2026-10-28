@@ -1,13 +1,16 @@
 class PlayerAction < ApplicationRecord
   belongs_to :game_session
-  has_one :story_turn, dependent: :destroy
-  has_many :story_summaries, dependent: :restrict_with_exception
   has_many :ai_requests, dependent: :destroy
+  has_many :story_turns, through: :ai_requests
 
   enum :status, { pending: "pending", completed: "completed", cancelled: "cancelled" }, validate: true
   validates :command, presence: true, length: { maximum: 2_000 }
   validates :position, numericality: { only_integer: true, greater_than: 0 }, uniqueness: { scope: :game_session_id }
   validates :game_session_id, uniqueness: { conditions: -> { pending } }, if: :pending?
+
+  def story_turn
+    story_turns.first
+  end
 
   def request_ai!(purpose:, provider:, model_identifier:, payload:)
     game_session.with_lock do
@@ -27,9 +30,9 @@ class PlayerAction < ApplicationRecord
       game_session.ensure_active!
       ensure_pending!
       narration = source.response_payload["narration"] if source.response_payload.is_a?(Hash)
-      turn = create_story_turn!(ai_request: source, narration: narration)
+      turn = source.create_story_turn!(narration: narration)
       update!(status: :completed)
-      game_session.add_summary!(content: summary, player_action: self)
+      game_session.add_summary!(content: summary, through_position: position)
       turn
     end
   end

@@ -1,14 +1,15 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="ru" class="<%= "game-document" if content_for(:body_class) == "game-page" %>">
   <head>
     <title><%= content_for(:title) || "RPI" %></title>
-    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-content">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="application-name" content="RPI">
     <meta name="mobile-web-app-capable" content="yes">
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
 
+    <%= javascript_include_tag "preferences", defer: true %>
     <%= yield :head %>
 
     <link rel="icon" href="/icon.png" type="image/png">

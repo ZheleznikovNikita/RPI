@@ -25,6 +25,16 @@ class StatisticsTest < ActionDispatch::IntegrationTest
     assert_select ".back-arrow[href=?]", profile_path(from: "game")
   end
 
+  test "statistics opened after finishing returns to menu while profile visits retain their context" do
+    sign_in
+    get statistics_path(from: "finished_game")
+    assert_select ".back-arrow[href=?][aria-label='В главное меню']", root_path
+    get statistics_path
+    assert_select ".back-arrow[href=?][aria-label='Назад в профиль']", profile_path
+    get statistics_path(from: "game")
+    assert_select ".back-arrow[href=?]", profile_path(from: "game")
+  end
+
   test "list shows at most ten completed games of the signed in user" do
     finished = 11.times.map do |index|
       game = @user.start_game_session!(title: "Прохождение #{index}")

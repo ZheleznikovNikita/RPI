@@ -18,7 +18,14 @@
     </p>
 
     <nav class="menu-actions" aria-label="Главное меню">
-      <%= link_to "Начать игру", game_path, class: "btn btn-primary" %>
+      <% if user_signed_in? && current_user.active_game_session %>
+        <%= link_to "Продолжить игру", game_path, class: "btn btn-primary" %>
+        <%= link_to "Новая игра", new_game_path, class: "btn btn-secondary" %>
+      <% elsif user_signed_in? %>
+        <%= button_to "Начать игру", start_game_path, class: "btn btn-primary" %>
+      <% else %>
+        <%= link_to "Начать игру", game_path, class: "btn btn-primary" %>
+      <% end %>
       <%= link_to "Настройки", settings_path, class: "btn btn-secondary" %>
       <%= link_to "Регистрация", register_path, class: "btn btn-secondary" %>
       <%= link_to "Авторизация", login_path, class: "btn btn-ghost" %>

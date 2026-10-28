@@ -1,0 +1,12 @@
+<% content_for :title, "Новая игра - RPI" %>
+<main class="auth-screen">
+  <section class="auth-card">
+    <%= back_arrow_to root_path, label: "В главное меню" %>
+    <h1>Новая игра</h1>
+    <p class="auth-copy">Начать новое прохождение? Текущее незавершённое прохождение будет заменено. Завершённые игры останутся в статистике.</p>
+    <div class="profile-actions restart-actions">
+      <%= link_to "Продолжить текущую", game_path, class: "btn btn-secondary" %>
+      <%= button_to "Начать заново", start_game_path, params: { replace_game_session_id: @game_session&.id }, class: "btn btn-primary" %>
+    </div>
+  </section>
+</main>

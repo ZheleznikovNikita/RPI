@@ -6,6 +6,7 @@
 
     form.addEventListener("submit", function (event) {
       event.preventDefault();
+      if (dialog.open) return;
       dialog.showModal();
     });
 

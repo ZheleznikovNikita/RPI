@@ -2,7 +2,7 @@
 <% content_for :body_class, "page-shell statistics-page" %>
 
 <main class="statistics-screen">
-  <%= back_arrow_to profile_path(profile_navigation_options), label: "Назад в профиль" %>
+  <%= back_arrow_to(params[:from] == "finished_game" ? root_path : profile_path(profile_navigation_options), label: params[:from] == "finished_game" ? "В главное меню" : "Назад в профиль") %>
   <header class="statistics-header">
     <h1>Статистика</h1>
     <p>Последние 10 завершённых прохождений</p>

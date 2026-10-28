@@ -6,6 +6,8 @@
 
     trigger.addEventListener("click", function () {
       if (dialog.open) return;
+      var menu = document.querySelector("[data-game-menu]");
+      if (menu) menu.open = false;
       dialog.showModal();
       trigger.setAttribute("aria-expanded", "true");
     });

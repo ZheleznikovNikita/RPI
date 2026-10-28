@@ -29,7 +29,8 @@
   }
 
   function saveSettings(settings) {
-    localStorage.setItem(storageKey, JSON.stringify(settings));
+    try { localStorage.setItem(storageKey, JSON.stringify(settings)); }
+    catch (_error) { /* Live editing remains available without persistent storage. */ }
   }
 
   function applySettings(settings) {

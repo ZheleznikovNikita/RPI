@@ -2,32 +2,49 @@
 <% content_for :body_class, "game-page" %>
 <% content_for :head do %>
   <%= javascript_include_tag "inventory", defer: true %>
+  <%= javascript_include_tag "game_menu", defer: true %>
+  <%= javascript_include_tag "music", defer: true %>
+  <%= javascript_include_tag "game", defer: true %>
 <% end %>
 
-<main class="game-screen" aria-label="Прототип игрового интерфейса">
+<main class="game-screen" aria-label="Игровой интерфейс" data-game>
   <section class="hud hud-left" aria-label="Состояние персонажа">
     <div class="stat-row">
       <span>HP</span>
       <div class="bar" aria-label="Здоровье">
-        <i style="width: 82%"></i>
+        <i style="width: <%= @game_session&.health || 100 %>%"></i>
       </div>
-      <strong>82</strong>
+      <strong><%= @game_session&.health || 100 %></strong>
     </div>
 
     <div class="stat-row">
       <span>STA</span>
       <div class="bar stamina" aria-label="Выносливость">
-        <i style="width: 64%"></i>
+        <i style="width: <%= @game_session&.stamina || 100 %>%"></i>
       </div>
-      <strong>64</strong>
+      <strong><%= @game_session&.stamina || 100 %></strong>
     </div>
   </section>
 
-  <nav class="hud hud-right" aria-label="Игровая навигация">
-    <button class="icon-btn" type="button" aria-label="Открыть инвентарь" aria-haspopup="dialog" aria-controls="inventory-dialog" aria-expanded="false" data-open-inventory>Инвентарь</button>
-    <%= link_to "Профиль", profile_path(from: "game"), class: "icon-btn" %>
-    <%= link_to "В меню", root_path, class: "icon-btn", aria: { label: "В главное меню" } %>
-  </nav>
+  <div class="game-controls" aria-label="Игровая навигация">
+    <button class="game-icon-button" type="button" aria-label="Открыть инвентарь" title="Инвентарь" aria-haspopup="dialog" aria-controls="inventory-dialog" aria-expanded="false" data-open-inventory>
+      <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M6 6h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2Z"/><path d="M4 12h16M8 16h8v6M9 9h6"/></svg>
+    </button>
+    <details class="game-menu" data-game-menu>
+      <summary class="game-icon-button" aria-label="Открыть игровое меню" title="Меню" aria-controls="game-menu-panel">
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+      </summary>
+      <nav id="game-menu-panel" class="game-menu-panel" aria-label="Меню игры">
+        <%= link_to "Профиль", profile_path(from: "game") %>
+        <%= link_to "В главное меню", root_path %>
+        <%= link_to "Настройки", settings_path(from: "game") %>
+        <% if user_signed_in? %>
+          <%= button_to "Завершить игру", finish_game_path, params: { game_session_id: @game_session&.id }, aria: { haspopup: "dialog", controls: "finish-confirmation" }, form: { hidden: @game_session.nil?, data: { finish_game: true, confirm_finish: true } } %>
+        <% end %>
+      </nav>
+    </details>
+  </div>
+  <span class="visually-hidden" role="status" data-music-status></span>
 
   <section class="scene-card" aria-label="Заглушка изображения сцены">
     <div class="scene-plate">
@@ -36,21 +53,48 @@
   </section>
 
   <section class="dialogue-panel" aria-label="Текст истории и ввод команды">
-    <p class="story-label">Текст истории</p>
-    <p>
-      Дорога тонет в тёплом тумане. Где-то за старыми камнями цвета кофе голос ждёт команду игрока,
-      которая позже будет отправляться в API ИИ.
-    </p>
+    <div class="story-heading">
+      <p class="story-label"><%= @game_session&.title || "У старых ворот" %></p>
+      <button type="button" class="story-skip" data-skip-typing hidden>Показать сразу</button>
+    </div>
+    <div class="story-scroll" tabindex="0" aria-label="История прохождения" data-story-history>
+      <p data-scene-text><%= GameController::SCENE_INTRO %></p>
+      <% @story_actions.each do |action| %>
+        <article class="story-entry">
+          <p class="player-echo" data-player-echo>Ваше действие: <%= action.command %></p>
+          <p data-story-text data-animate="<%= flash[:animate_story] && action == @story_actions.last %>"><%= action.story_turn&.narration %></p>
+        </article>
+      <% end %>
+      <% if flash[:story_feedback_status] == "completed" && flash[:story_feedback].present? %>
+        <article class="story-entry"><p data-story-text data-animate="true"><%= flash[:story_feedback] %></p></article>
+      <% end %>
+    </div>
+    <p class="visually-hidden" role="status" aria-live="polite" data-story-announcement></p>
 
-    <form class="command-form" action="#" method="post">
-      <label for="player-command">Команда игрока</label>
+    <% command_hint = user_signed_in? ? "Прогресс сохраняется в вашем аккаунте." : "Гостевой режим. Войдите в профиль, чтобы сохранять прохождение." %>
+    <% command_error = flash[:story_feedback] if flash[:story_feedback_status].present? && flash[:story_feedback_status] != "completed" %>
+    <%= form_with url: game_path, method: :post, class: "command-form", data: { command_form: true, draft_key: "rpi-command-#{current_user&.id || 'guest'}-#{@game_session&.id || 'new'}" } do |form| %>
+      <%= form.hidden_field :game_session_id, value: @game_session&.id %>
+      <%= form.label :command, "Команда игрока", for: "player-command" %>
       <div class="command-row">
-        <input id="player-command" type="text" placeholder="например: осмотреть ворота" autocomplete="off">
-        <button class="btn btn-primary" type="button">Отправить</button>
+        <%= form.text_field :command, id: "player-command", placeholder: "например: осмотреть ворота", autocomplete: "off", maxlength: 2000, required: true, aria: { describedby: "command-feedback" } %>
+        <%= form.button "Отправить", class: "btn btn-primary", data: { send_command: true } %>
       </div>
-    </form>
+      <p id="command-feedback" class="command-feedback <%= "is-error" if command_error.present? %>" role="status" data-default-feedback="<%= command_hint %>" <%= "hidden" if command_error.blank? && (@story_actions.any? || flash[:story_feedback_status] == "completed") %>><%= command_error.presence || command_hint %></p>
+    <% end %>
   </section>
 </main>
+
+<% if user_signed_in? %>
+  <dialog id="finish-confirmation" class="logout-dialog finish-dialog" aria-labelledby="finish-title" aria-describedby="finish-description">
+    <h2 id="finish-title">Завершить прохождение?</h2>
+    <p id="finish-description">Результат сохранится в статистике. Вернуться к этому прохождению после завершения не получится.</p>
+    <div class="logout-dialog-actions">
+      <button type="button" class="btn btn-secondary" data-cancel-finish autofocus>Продолжить игру</button>
+      <button type="button" class="btn btn-primary" data-confirm-finish-button>Завершить игру</button>
+    </div>
+  </dialog>
+<% end %>
 
 <dialog id="inventory-dialog" class="inventory-dialog" aria-labelledby="inventory-title">
   <header class="inventory-header">
@@ -59,9 +103,18 @@
       <span aria-hidden="true">&times;</span>
     </button>
   </header>
+  <% if @inventory_items.empty? %>
+    <p class="inventory-empty">Инвентарь пока пуст. Найденные в приключении предметы появятся здесь.</p>
+  <% end %>
   <div class="inventory-grid" role="list" aria-label="Слоты инвентаря">
-    <% 9.times do |index| %>
-      <div class="inventory-slot" role="listitem" aria-label="Пустой слот <%= index + 1 %>"></div>
+    <% @inventory_items.each do |item| %>
+      <div class="inventory-slot inventory-slot-filled" role="listitem">
+        <strong><%= item.name %></strong><span>× <%= item.quantity %></span>
+        <p><%= item.description %></p>
+      </div>
+    <% end %>
+    <% [9 - @inventory_items.size, 0].max.times do |index| %>
+      <div class="inventory-slot" role="listitem" aria-label="Пустой слот <%= @inventory_items.size + index + 1 %>"></div>
     <% end %>
   </div>
 </dialog>

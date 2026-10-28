@@ -11,8 +11,11 @@ class NavigationTest < ActionDispatch::IntegrationTest
 
   test "game profile and ui kit retain return route" do
     get game_path
-    assert_select ".hud-right a[href=?]", profile_path(from: "game")
-    assert_select ".hud-right a:last-child[href=?]", root_path
+    assert_select "details[data-game-menu] summary[aria-controls='game-menu-panel']"
+    assert_select ".game-menu-panel a[href=?]", profile_path(from: "game")
+    assert_select ".game-menu-panel a[href=?]", root_path
+    assert_select ".game-menu-panel a[href=?]", settings_path(from: "game")
+    assert_select ".game-controls button[data-open-inventory][aria-controls='inventory-dialog'] svg"
     get profile_path(from: "game")
     assert_select ".back-arrow[href=?][aria-label='Назад в игру']", game_path
     assert_select "a[href=?]", login_path(from: "game")

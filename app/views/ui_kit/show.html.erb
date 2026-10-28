@@ -1,5 +1,8 @@
 <% content_for :title, "UI Kit - RPI" %>
 <% content_for :ui_lab_enabled, "true" %>
+<% content_for :head do %>
+  <%= javascript_include_tag "music", defer: true %>
+<% end %>
 <main class="kit-screen">
   <header class="kit-header">
     <%= back_arrow_to profile_path(profile_navigation_options), label: "Назад в профиль" %>
@@ -26,9 +29,11 @@
     <div class="kit-columns">
       <div class="field"><label for="kit-name">Имя персонажа</label><input id="kit-name" type="text" placeholder="Странник" maxlength="40"><small>До 40 символов</small></div>
       <div class="field"><label for="kit-email">Email</label><input id="kit-email" type="email" value="player@" aria-invalid="true" aria-describedby="kit-email-error"><small id="kit-email-error" class="field-error">Введите полный адрес электронной почты</small></div>
-      <label class="toggle-row"><span>Звуки окружения</span><input type="checkbox" checked></label>
-      <div class="field"><label for="kit-font">Размер текста</label><input id="kit-font" type="range" min="14" max="24" value="18"></div>
+      <label class="toggle-row"><span>Постепенный вывод текста</span><input type="checkbox" data-setting="typewriter" checked></label>
+      <%= render "shared/volume_control", control_id: "kit-music-volume" %>
     </div>
+    <div class="kit-row settings-preview"><button type="button" class="btn btn-secondary" data-music-toggle aria-pressed="true">Выключить музыку</button><span class="visually-hidden" role="status" data-music-status></span></div>
+    <p class="settings-note">Эти настройки действуют и на игровом экране.</p>
   </section>
   <section class="kit-section" id="game">
     <h2>Персонаж и история</h2>
@@ -45,6 +50,7 @@
     <div class="kit-dialogue">
       <p class="story-label">У старых ворот</p><p>Вы находите дневник у каменной арки. Между страницами лежит карта с отмеченной тропой.</p>
       <div class="command-form"><label for="kit-command">Ваше действие</label><div class="command-row"><input id="kit-command" type="text" placeholder="Осмотреть карту"><button class="btn btn-primary" type="button" disabled>Отправить</button></div></div>
+      <p class="command-feedback">Отправка доступна на странице игры. Во время ответа кнопка блокируется.</p>
     </div>
   </section>
 </main>

@@ -2,6 +2,10 @@ Rails.application.routes.draw do
   root "home#index"
 
   get "game", to: "game#show"
+  post "game", to: "game#command"
+  get "game/new", to: "game#new", as: :new_game
+  post "game/start", to: "game#start", as: :start_game
+  post "game/finish", to: "game#finish", as: :finish_game
   get "login", to: "sessions#new", as: :login
   post "login", to: "sessions#create"
   delete "logout", to: "sessions#destroy", as: :logout

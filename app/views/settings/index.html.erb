@@ -1,26 +1,30 @@
 <% content_for :title, "Настройки - RPI" %>
 <% content_for :body_class, "page-shell settings-page" %>
+<% content_for :head do %>
+  <%= javascript_include_tag "music", defer: true %>
+<% end %>
 
 <main class="settings-screen">
   <section class="settings-panel" aria-labelledby="settings-title">
-    <%= back_arrow_to root_path, label: "В главное меню" %>
+    <%= back_arrow_to(params[:from] == "game" ? game_path : root_path, label: params[:from] == "game" ? "Назад в игру" : "В главное меню") %>
     <h1 id="settings-title">Настройки</h1>
 
     <div class="settings-grid">
-      <label class="toggle-row">
-        <span>ИИ-рассказчик</span>
-        <input type="checkbox" checked>
-      </label>
+      <%= render "shared/volume_control", control_id: "music-volume" %>
+      <button type="button" class="btn btn-secondary" data-music-toggle aria-pressed="true">Выключить музыку</button>
+      <span class="visually-hidden" role="status" data-music-status></span>
 
       <label class="toggle-row">
-        <span>Генерация изображения сцены</span>
-        <input type="checkbox" checked>
+        <span>Постепенный вывод текста</span>
+        <input type="checkbox" data-setting="typewriter" checked>
       </label>
 
-      <label class="toggle-row">
-        <span>Автосохранение краткого сюжета</span>
-        <input type="checkbox" checked>
-      </label>
+      <p class="settings-note" data-preferences-status>Настройки сохраняются автоматически в этом браузере.</p>
+      <div class="settings-upcoming">
+        <p class="story-label">Позже в игре</p>
+        <p>Изображения сцен и память сюжета станут доступны после подключения нейросети.</p>
+      </div>
+      <noscript><p class="settings-note">Для настройки звука и постепенного вывода текста включите JavaScript.</p></noscript>
     </div>
   </section>
 </main>

@@ -171,7 +171,9 @@ ruby bin/rails zeitwerk:check
 
 Конфигурация [.github/workflows/ci.yml](.github/workflows/ci.yml) запускает пять задач при push в main и для pull request: аудит Ruby-кода и gems, проверку синтаксиса локальных JavaScript-файлов, RuboCop, Rails-тесты и системные тесты. Браузерные системные тесты пока не написаны; соответствующая задача оставлена как заготовка.
 
-CI работает на Ubuntu. В Gemfile.lock сохранены обе платформы: Windows `x64-mingw-ucrt` и Linux `x86_64-linux`. Не удаляйте Linux из lockfile при обновлении зависимостей на Windows. Добавить платформу повторно можно командой `bundle lock --add-platform x86_64-linux`; изменённый Gemfile.lock должен попасть в коммит.
+CI закреплён на `ubuntu-24.04`: для Ruby 4.0.1 из `.ruby-version` есть готовая сборка на этом образе, а на Ubuntu 26.04 её нет. Плавающий `ubuntu-latest` может сменить версию ОС и сломать установку Ruby ещё до запуска проверок. При будущем обновлении Ruby совместимость образа нужно проверить заново.
+
+В Gemfile.lock сохранены обе платформы: Windows `x64-mingw-ucrt` и Linux `x86_64-linux`. Не удаляйте Linux из lockfile при обновлении зависимостей на Windows. Добавить платформу повторно можно командой `bundle lock --add-platform x86_64-linux`; изменённый Gemfile.lock должен попасть в коммит.
 
 Ruby-скрипты в workflow запускаются через `ruby bin/...`, поэтому Windows-строка запуска и отсутствие Unix-права исполнения не мешают CI. Importmap/npm-зависимости сейчас не используются: задача scan_js проверяет синтаксис файлов в app/assets/javascripts через Node.js 24, а не выполняет отсутствующий bin/importmap. Node.js нужен для этой проверки CI, но не для запуска Rails-сайта.
 

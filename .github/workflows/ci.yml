@@ -6,8 +6,10 @@ on:
     branches: [ main ]
 
 jobs:
+  # Ruby 4.0.1 has prebuilt binaries for 24.04, but not for 26.04.
+  # Pin the runner so ubuntu-latest migrations cannot break Ruby setup.
   scan_ruby:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
       - name: Checkout code
@@ -25,7 +27,7 @@ jobs:
         run: ruby bin/bundler-audit check --update
       
   scan_js:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
       - name: Checkout code
@@ -45,7 +47,7 @@ jobs:
           done
 
   lint:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     env:
       RUBOCOP_CACHE_ROOT: tmp/rubocop
     steps:
@@ -71,7 +73,7 @@ jobs:
         run: ruby bin/rubocop -f github
 
   test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     # services:
     #  redis:
@@ -96,7 +98,7 @@ jobs:
         run: ruby bin/rails db:test:prepare test
 
   system-test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     # services:
     #  redis:

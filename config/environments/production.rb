@@ -1,6 +1,13 @@
 require "active_support/core_ext/integer/time"
 
 Rails.application.configure do
+  # Temporary public demos through an HTTPS-terminating SSH tunnel.
+  if ENV["RPI_PUBLIC_TUNNEL"] == "1"
+    config.assume_ssl = true
+    config.force_ssl = true
+    config.ssl_options = { redirect: { exclude: ->(request) { request.path == "/up" } } }
+    config.hosts = [ "127.0.0.1", "localhost", ".localhost.run", ".lhr.life", ".pinggy.link", ".pinggy-free.link" ]
+  end
   # Settings specified here will take precedence over those in config/application.rb.
 
   # Code is not reloaded between requests.

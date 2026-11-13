@@ -96,6 +96,9 @@
       revision = nextRevision;
       var render = event.detail.render;
       event.detail.render = async function (stream) {
+        // Turbo waits for a repaint after before-stream-render. A newer snapshot
+        // may have arrived during that wait, so check again before changing DOM.
+        if (nextRevision !== revision) return;
         if (finishTyping) finishTyping();
         await render(stream);
         var current = document.querySelector('#live-state [data-live-snapshot]');

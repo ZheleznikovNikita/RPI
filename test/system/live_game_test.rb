@@ -85,6 +85,42 @@ class LiveGameSystemTest < ApplicationSystemTestCase
     end
   end
 
+  test "a delayed older stream cannot replace a newer pending state" do
+    within_window(@first) do
+      page.execute_script(<<~JS)
+        window.rpiDelayOld = function(event) {
+          if (event.target.getAttribute('target') !== 'live-state') return;
+          if (!event.target.querySelector('template').content.querySelector('[data-delayed-test]')) return;
+          var render = event.detail.render;
+          event.detail.render = async function(stream) {
+            document.body.dataset.oldRenderWaiting = 'true';
+            await new Promise(function(resolve) { window.releaseOldRender = resolve; });
+            await render(stream);
+            document.body.dataset.oldRenderFinished = 'true';
+          };
+        };
+        document.addEventListener('turbo:before-stream-render', window.rpiDelayOld);
+        var snapshot = document.querySelector('[data-live-snapshot]').cloneNode(true);
+        window.testRevision = Math.max(Number(snapshot.dataset.revision), Date.now() / 1000) + 10;
+        snapshot.dataset.revision = window.testRevision;
+        snapshot.dataset.delayedTest = 'true';
+        window.Turbo.renderStreamMessage('<turbo-stream action="update" target="live-state"><template>' + snapshot.outerHTML + '</template></turbo-stream>');
+      JS
+      assert_selector 'body[data-old-render-waiting="true"]'
+      page.execute_script(<<~JS)
+        var snapshot = document.querySelector('[data-live-snapshot]').cloneNode(true);
+        snapshot.dataset.revision = window.testRevision + 1;
+        snapshot.dataset.pending = 'true';
+        window.Turbo.renderStreamMessage('<turbo-stream action="update" target="live-state"><template>' + snapshot.outerHTML + '</template></turbo-stream>');
+      JS
+      assert_selector '[data-live-snapshot][data-pending="true"]', visible: :all
+      page.execute_script("window.releaseOldRender()")
+      assert_selector 'body[data-old-render-finished="true"]'
+      assert_selector '[data-live-snapshot][data-pending="true"]', visible: :all
+      assert_text "Рассказчик готовит ответ"
+    end
+  end
+
   test "real in-process async worker completes a command without manual job execution" do
     previous = NarrationJob.queue_adapter
     previous_test_adapter = NarrationJob._test_adapter

@@ -86,8 +86,12 @@ class LiveGameSystemTest < ApplicationSystemTestCase
 
   test "real in-process async worker completes a command without manual job execution" do
     previous = NarrationJob.queue_adapter
+    previous_test_adapter = NarrationJob._test_adapter
     adapter = ActiveJob::QueueAdapters::AsyncAdapter.new(min_threads: 1, max_threads: 1)
+    # TestHelper can override queue_adapter after earlier tests load this job.
+    NarrationJob.disable_test_adapter
     NarrationJob.queue_adapter = adapter
+    assert_same adapter, NarrationJob.queue_adapter
     within_window(@first) do
       fill_in "Команда игрока", with: "Проверить колёса"
       click_button "Отправить"
@@ -102,5 +106,6 @@ class LiveGameSystemTest < ApplicationSystemTestCase
   ensure
     adapter&.shutdown(wait: true)
     NarrationJob.queue_adapter = previous
+    NarrationJob.enable_test_adapter(previous_test_adapter)
   end
 end

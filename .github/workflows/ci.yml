@@ -99,6 +99,10 @@ jobs:
 
   system-test:
     runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        seed: [17092, 24502]
 
     # services:
     #  redis:
@@ -120,12 +124,14 @@ jobs:
           RAILS_ENV: test
           # RAILS_MASTER_KEY: ${{ secrets.RAILS_MASTER_KEY }}
           # REDIS_URL: redis://localhost:6379/0
-        run: ruby bin/rails db:test:prepare test:system
+        run: |
+          ruby bin/rails db:test:prepare
+          ruby bin/rails test:system --seed ${{ matrix.seed }}
 
       - name: Keep screenshots from failed system tests
         uses: actions/upload-artifact@v4
         if: failure()
         with:
-          name: screenshots
+          name: screenshots-${{ matrix.seed }}
           path: ${{ github.workspace }}/tmp/screenshots
           if-no-files-found: ignore

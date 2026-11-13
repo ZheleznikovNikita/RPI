@@ -8,6 +8,7 @@ class LiveGameSystemTest < ApplicationSystemTestCase
     fill_in "Email", with: @player.email
     fill_in "Пароль", with: "Lantern!Orbit7Cedar"
     click_button "Войти"
+    assert_current_path profile_path
     visit game_path
     assert_selector "turbo-cable-stream-source[connected]", visible: :all
     @first = current_window

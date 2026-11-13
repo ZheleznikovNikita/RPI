@@ -1,4 +1,5 @@
 /.bundle
+/.codex-remote-attachments/
 /vendor/bundle
 
 /log/*

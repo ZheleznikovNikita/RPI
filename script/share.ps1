@@ -50,7 +50,11 @@ try {
         }
         foreach ($name in $variables.Keys) {
             $savedEnvironment[$name] = [Environment]::GetEnvironmentVariable($name, 'Process')
-            [Environment]::SetEnvironmentVariable($name, $variables[$name], 'Process')
+            if ($null -eq $variables[$name]) {
+                Remove-Item -LiteralPath "Env:$name" -ErrorAction SilentlyContinue
+            } else {
+                [Environment]::SetEnvironmentVariable($name, $variables[$name], 'Process')
+            }
         }
         & ruby bin/rails db:prepare assets:precompile
         if ($LASTEXITCODE -ne 0) { throw 'Database/assets preparation failed.' }
@@ -66,7 +70,11 @@ try {
     }
 } finally {
     foreach ($name in $savedEnvironment.Keys) {
-        [Environment]::SetEnvironmentVariable($name, $savedEnvironment[$name], 'Process')
+        if ($null -eq $savedEnvironment[$name]) {
+            Remove-Item -LiteralPath "Env:$name" -ErrorAction SilentlyContinue
+        } else {
+            [Environment]::SetEnvironmentVariable($name, $savedEnvironment[$name], 'Process')
+        }
     }
     Pop-Location
 }

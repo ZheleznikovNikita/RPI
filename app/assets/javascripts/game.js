@@ -91,7 +91,7 @@
       feedback.textContent = "Ожидаем ответ…";
       feedback.classList.remove("is-error");
       var controller = new AbortController();
-      var requestTimeout = window.setTimeout(function () { controller.abort(); }, 20000);
+      var requestTimeout = window.setTimeout(function () { controller.abort(); }, 60000);
       var receivedResponse = false;
       try {
         var response = await fetch(form.action, {

@@ -6,7 +6,7 @@ Rails.application.configure do
     config.assume_ssl = true
     config.force_ssl = true
     config.ssl_options = { redirect: { exclude: ->(request) { request.path == "/up" } } }
-    config.hosts = [ "127.0.0.1", "localhost", ".localhost.run", ".lhr.life", ".pinggy.link", ".pinggy-free.link" ]
+    config.hosts = [ "127.0.0.1", "localhost", ".localhost.run", ".lhr.life", ".pinggy.link", ".pinggy-free.link", ".free.pinggy.net" ]
   end
   # Settings specified here will take precedence over those in config/application.rb.
 

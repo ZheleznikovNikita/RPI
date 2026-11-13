@@ -10,19 +10,44 @@ module Storytelling
     def call(command:, game_session: nil)
       return Result.new(status: "completed", text: OfflineProvider::MESSAGE) unless game_session
 
+      _action, request = prepare_request(game_session, command)
+      perform_request(request)
+    end
+
+    def enqueue(command:, game_session:)
       action, request = prepare_request(game_session, command)
       begin
+        raise "Job enqueue failed" unless NarrationJob.perform_later(request.id)
+      rescue StandardError
+        reject_attempt(action, request, ERROR_MESSAGE)
+        raise
+      ensure
+        LiveUpdates.broadcast(game_session.user)
+      end
+      request
+    end
+
+    def perform_request(request)
+      action = request.player_action
+      request.with_lock do
+        return unless request.pending?
         request.start!
+      end
+      LiveUpdates.broadcast(action.game_session.user)
+      begin
         # The adapter performs its network call here, outside database locks.
         response = @provider.call(payload: request.request_payload)
         validate_response!(response)
         request.succeed!(response: response)
         turn = action.complete!(request: request, summary: response.fetch("summary"))
+        action.game_session.touch
         Result.new(status: "completed", text: turn.narration)
       rescue StandardError => error
         Rails.logger.error("Narration failed (#{error.class.name})")
         reject_attempt(action, request, ERROR_MESSAGE)
         Result.new(status: "error", text: ERROR_MESSAGE)
+      ensure
+        LiveUpdates.broadcast(action.game_session.user)
       end
     end
 
@@ -37,6 +62,7 @@ module Storytelling
         request = action.request_ai!(purpose: "narration", provider: @provider.name, model_identifier: @provider.model_identifier,
           payload: { "command" => command, "summary" => game.summary, "history" => history,
             "scene" => game.opening_scene, "scene_title" => game.title })
+        game.touch
         [ action, request ]
       end
     end
@@ -50,6 +76,7 @@ module Storytelling
     def reject_attempt(action, request, message)
       request.reload.fail!(message: message) if request.reload.pending? || request.running?
       action.reload.cancel! if action.reload.pending?
+      action.game_session.touch
     end
   end
 end

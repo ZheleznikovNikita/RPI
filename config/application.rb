@@ -10,6 +10,8 @@ module Rpi
   class Application < Rails::Application
     # Initialize configuration defaults for originally generated Rails version.
     config.load_defaults 8.1
+    # Single-process local demo: jobs and Cable run inside Puma.
+    config.active_job.queue_adapter = :async
     config.i18n.default_locale = :ru
 
     # Please, add to the `ignore` list any other `lib` subdirectories that do

@@ -7,6 +7,7 @@ class RegistrationsController < ApplicationController
     @user = User.new(user_params)
 
     if @user.save
+      ActionCable.server.remote_connections.where(current_user: current_user).disconnect if current_user
       reset_session
       session[:user_id] = @user.id
       redirect_to profile_path(profile_navigation_options), notice: "Регистрация завершена. Добро пожаловать, #{@user.name}!"

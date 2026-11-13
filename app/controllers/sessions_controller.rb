@@ -4,6 +4,7 @@ class SessionsController < ApplicationController
   end
 
   def destroy
+    ActionCable.server.remote_connections.where(current_user: current_user).disconnect if current_user
     reset_session
     redirect_to root_path, notice: "Вы вышли из аккаунта.", status: :see_other
   end
@@ -12,6 +13,7 @@ class SessionsController < ApplicationController
     user = User.find_by(email: params[:email].to_s.strip.downcase)
 
     if user&.authenticate(params[:password])
+      ActionCable.server.remote_connections.where(current_user: current_user).disconnect if current_user
       reset_session
       session[:user_id] = user.id
       redirect_to profile_path(profile_navigation_options), notice: "Вы вошли как #{user.name}."

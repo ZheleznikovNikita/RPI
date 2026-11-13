@@ -1,0 +1,16 @@
+<%= turbo_frame_tag :inventory_contents do %>
+  <% if @inventory_items.empty? %>
+    <p class="inventory-empty">Инвентарь пока пуст. Найденные в приключении предметы появятся здесь.</p>
+  <% end %>
+  <div class="inventory-grid" role="list" aria-label="Слоты инвентаря">
+    <% @inventory_items.each do |item| %>
+      <div class="inventory-slot inventory-slot-filled" role="listitem">
+        <strong><%= item.name %></strong><span>× <%= item.quantity %></span>
+        <p><%= item.description %></p>
+      </div>
+    <% end %>
+    <% [9 - @inventory_items.size, 0].max.times do |index| %>
+      <div class="inventory-slot" role="listitem" aria-label="Пустой слот <%= @inventory_items.size + index + 1 %>"></div>
+    <% end %>
+  </div>
+<% end %>

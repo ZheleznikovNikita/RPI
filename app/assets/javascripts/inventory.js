@@ -9,6 +9,8 @@
       var menu = document.querySelector("[data-game-menu]");
       if (menu) menu.open = false;
       dialog.showModal();
+      var frame = dialog.querySelector("turbo-frame[src]");
+      if (frame && frame.complete && typeof frame.reload === "function") frame.reload();
       trigger.setAttribute("aria-expanded", "true");
     });
 

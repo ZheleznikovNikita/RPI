@@ -1,6 +1,10 @@
 <% content_for :title, "Игра - RPI" %>
 <% content_for :body_class, "game-page" %>
 <% content_for :head do %>
+  <% if user_signed_in? %>
+    <%= javascript_include_tag "turbo", type: "module" %>
+    <%= javascript_include_tag "live_game", defer: true %>
+  <% end %>
   <%= javascript_include_tag "inventory", defer: true %>
   <%= javascript_include_tag "game_menu", defer: true %>
   <%= javascript_include_tag "music", defer: true %>
@@ -8,6 +12,10 @@
 <% end %>
 
 <main class="game-screen" aria-label="Игровой интерфейс" data-game>
+  <% if user_signed_in? %>
+    <%= turbo_stream_from :game_ui, channel: "GameChannel" %>
+    <p class="visually-hidden" role="status" data-live-connection>Подключение живых обновлений…</p>
+  <% end %>
   <section class="hud hud-left" aria-label="Состояние персонажа">
     <div class="stat-row">
       <span>HP</span>
@@ -57,10 +65,11 @@
       <p class="story-label"><%= @opening.fetch(:title) %></p>
       <button type="button" class="story-skip" data-skip-typing hidden>Показать сразу</button>
     </div>
+    <div id="live-state" style="display: contents">
     <div class="story-scroll" tabindex="0" aria-label="История прохождения" data-story-history>
       <p data-scene-text><%= @opening.fetch(:intro) %></p>
       <% @story_actions.each do |action| %>
-        <article class="story-entry">
+        <article class="story-entry" id="<%= dom_id(action) %>">
           <p class="player-echo" data-player-echo>Ваше действие: <%= action.command %></p>
           <p data-story-text data-animate="<%= flash[:animate_story] && action == @story_actions.last %>"><%= action.story_turn&.narration %></p>
         </article>
@@ -69,11 +78,12 @@
         <article class="story-entry"><p data-story-text data-animate="true"><%= flash[:story_feedback] %></p></article>
       <% end %>
     </div>
+    </div>
     <p class="visually-hidden" role="status" aria-live="polite" data-story-announcement></p>
 
     <% command_hint = user_signed_in? ? "Прогресс сохраняется в вашем аккаунте." : "Гостевой режим. Войдите в профиль, чтобы сохранять прохождение." %>
     <% command_error = flash[:story_feedback] if flash[:story_feedback_status].present? && flash[:story_feedback_status] != "completed" %>
-    <%= form_with url: game_path, method: :post, class: "command-form", data: { command_form: true, draft_key: "rpi-command-#{current_user&.id || 'guest'}-#{@game_session&.id || 'new'}" } do |form| %>
+    <%= form_with url: game_path, method: :post, class: "command-form", data: { command_form: true, live: user_signed_in?, state_url: game_state_path, draft_key: "rpi-command-#{current_user&.id || 'guest'}-#{@game_session&.id || 'new'}" } do |form| %>
       <%= form.hidden_field :game_session_id, value: @game_session&.id %>
       <%= form.label :command, "Команда игрока", for: "player-command" %>
       <div class="command-row">
@@ -103,6 +113,7 @@
       <span aria-hidden="true">&times;</span>
     </button>
   </header>
+  <%= turbo_frame_tag :inventory_contents, src: (game_inventory_path if user_signed_in?), loading: :lazy do %>
   <% if @inventory_items.empty? %>
     <p class="inventory-empty">Инвентарь пока пуст. Найденные в приключении предметы появятся здесь.</p>
   <% end %>
@@ -117,4 +128,5 @@
       <div class="inventory-slot" role="listitem" aria-label="Пустой слот <%= @inventory_items.size + index + 1 %>"></div>
     <% end %>
   </div>
+  <% end %>
 </dialog>

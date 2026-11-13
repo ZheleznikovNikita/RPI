@@ -20,7 +20,7 @@
     <%= javascript_include_tag "ui_lab", defer: true %>
   </head>
 
-  <body class="<%= content_for(:body_class) || "page-shell" %>" data-ui-lab="<%= content_for?(:ui_lab_enabled) ? "enabled" : "disabled" %>">
+  <body class="<%= content_for(:body_class) || "page-shell" %>" data-turbo="false" data-ui-lab="<%= content_for?(:ui_lab_enabled) ? "enabled" : "disabled" %>">
     <% if notice.present? %>
       <div class="flash-message flash-notice" data-flash="notice"><%= notice %></div>
     <% end %>

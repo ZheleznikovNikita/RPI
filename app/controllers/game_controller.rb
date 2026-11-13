@@ -14,6 +14,27 @@ class GameController < ApplicationController
     end
   end
 
+  def state
+    unless current_user
+      head :unauthorized
+      return
+    end
+    game = current_user.game_sessions.active.first
+    Storytelling::LiveUpdates.expire_stale!(game)
+    response.headers["Cache-Control"] = "no-store"
+    render turbo_stream: turbo_stream.update("live-state", partial: "game/live_state", locals: { game: game })
+  end
+
+  def inventory
+    unless current_user
+      head :unauthorized
+      return
+    end
+    @inventory_items = current_user.game_sessions.active.first&.inventory&.inventory_items&.order(:name)&.to_a || []
+    response.headers["Cache-Control"] = "no-store"
+    render partial: "game/inventory_contents"
+  end
+
   def start
     unless user_signed_in?
       redirect_to game_path
@@ -30,6 +51,7 @@ class GameController < ApplicationController
       session.delete(:opening_scene_index)
     end
 
+    Storytelling::LiveUpdates.broadcast(current_user)
     redirect_to game_path, status: :see_other
   rescue ActiveRecord::StatementTimeout, ActiveRecord::RecordNotUnique
     redirect_to root_path, alert: "Прохождение сейчас обновляется. Попробуйте ещё раз."
@@ -48,6 +70,7 @@ class GameController < ApplicationController
     end
 
     game.finish!
+    Storytelling::LiveUpdates.broadcast(current_user)
     redirect_to statistics_path(from: "finished_game"), notice: "Прохождение завершено. Результат сохранён.", status: :see_other
   rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotFound, ActiveRecord::StatementTimeout
     redirect_to game_path, alert: "Сначала дождитесь завершения текущего действия."
@@ -73,6 +96,18 @@ class GameController < ApplicationController
       end
     end
 
+    if game && request.headers["X-RPI-Live"] == "1" && request.format.json?
+      begin
+        pending = Storytelling::Narrator.new.enqueue(command: command.strip, game_session: game)
+      rescue ActiveRecord::ActiveRecordError
+        raise
+      rescue StandardError
+        respond_to_command(status: "error", text: Storytelling::Narrator::ERROR_MESSAGE, http_status: :service_unavailable, game: game)
+        return
+      end
+      render json: { status: "accepted", text: "Рассказчик готовит ответ…", game_session_id: game.id, request_id: pending.id }, status: :accepted
+      return
+    end
     result = Storytelling::Narrator.new.call(command: command.strip, game_session: game)
     respond_to_command(status: result.status, text: result.text, http_status: result.status == "error" ? :bad_gateway : :ok, game: game)
   rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotUnique, ActiveRecord::RecordNotFound, ActiveRecord::StatementTimeout

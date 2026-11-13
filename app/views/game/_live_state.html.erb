@@ -1,0 +1,18 @@
+<% actions = game ? game.player_actions.completed.includes(:story_turns).to_a : [] %>
+<% last_request = game&.ai_requests&.reorder(id: :desc)&.first %>
+<% pending = game && game.player_actions.pending.exists? %>
+<div style="display: contents" data-live-snapshot data-game-id="<%= game&.id %>" data-health="<%= game&.health %>" data-stamina="<%= game&.stamina %>" data-pending="<%= !!pending %>" data-failed="<%= last_request&.failed? || false %>" data-request-id="<%= last_request&.id %>" data-retry-command="<%= last_request&.failed? ? last_request.player_action.command : "" %>" data-revision="<%= game&.updated_at&.to_f || Time.current.to_f %>" data-title="<%= game&.title %>">
+  <div class="story-scroll" tabindex="0" aria-label="История прохождения" data-story-history>
+    <% if game %>
+      <p data-scene-text><%= game.opening_scene %></p>
+      <% actions.each do |action| %>
+        <article class="story-entry" id="<%= dom_id(action) %>">
+          <p class="player-echo" data-player-echo>Ваше действие: <%= action.command %></p>
+          <p data-story-text><%= action.story_turn&.narration %></p>
+        </article>
+      <% end %>
+    <% else %>
+      <p>Активного прохождения нет. Можно начать новую игру из главного меню.</p>
+    <% end %>
+  </div>
+</div>

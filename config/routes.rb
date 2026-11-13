@@ -2,6 +2,8 @@ Rails.application.routes.draw do
   root "home#index"
 
   get "game", to: "game#show"
+  get "game/state", to: "game#state", as: :game_state
+  get "game/inventory", to: "game#inventory", as: :game_inventory
   post "game", to: "game#command"
   get "game/new", to: "game#new", as: :new_game
   post "game/start", to: "game#start", as: :start_game

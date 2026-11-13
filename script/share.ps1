@@ -40,6 +40,9 @@ try {
             RPI_PUBLIC_TUNNEL = '1'
             SECRET_KEY_BASE = (Get-Content -LiteralPath $secretFile -Raw).Trim()
             RAILS_SERVE_STATIC_FILES = '1'
+            # Puma uses 0 workers for single-process mode (Windows has no fork).
+            WEB_CONCURRENCY = '0'
+            SOLID_QUEUE_IN_PUMA = $null
         }
         foreach ($name in $variables.Keys) {
             $savedEnvironment[$name] = [Environment]::GetEnvironmentVariable($name, 'Process')

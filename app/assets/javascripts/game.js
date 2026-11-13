@@ -3,6 +3,7 @@
   document.addEventListener("DOMContentLoaded", function () {
     var form = document.querySelector("[data-command-form]");
     if (!form) return;
+    if (form.dataset.live === "true") return;
     var input = form.querySelector('[name="command"]');
     var button = form.querySelector("[data-send-command]");
     var history = document.querySelector("[data-story-history]");

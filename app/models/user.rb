@@ -13,10 +13,11 @@ class User < ApplicationRecord
   validates :password_confirmation, presence: true, if: -> { password.present? }
   validate :password_strength, if: -> { password.present? }
 
-  def start_game_session!(title:)
+  def start_game_session!(title: nil, opening: nil)
+    opening ||= title ? (StartingScenes::SCENES.find { |scene| scene[:title] == title } || StartingScenes::DEFAULT) : StartingScenes.random
     with_lock do
       game_sessions.active.each(&:destroy!)
-      game_sessions.create!(title: title)
+      game_sessions.create!(title: title || opening.fetch(:title), opening_scene: opening.fetch(:intro))
     end
   end
 

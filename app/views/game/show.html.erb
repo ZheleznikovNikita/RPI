@@ -54,11 +54,11 @@
 
   <section class="dialogue-panel" aria-label="Текст истории и ввод команды">
     <div class="story-heading">
-      <p class="story-label"><%= @game_session&.title || "У старых ворот" %></p>
+      <p class="story-label"><%= @opening.fetch(:title) %></p>
       <button type="button" class="story-skip" data-skip-typing hidden>Показать сразу</button>
     </div>
     <div class="story-scroll" tabindex="0" aria-label="История прохождения" data-story-history>
-      <p data-scene-text><%= GameController::SCENE_INTRO %></p>
+      <p data-scene-text><%= @opening.fetch(:intro) %></p>
       <% @story_actions.each do |action| %>
         <article class="story-entry">
           <p class="player-echo" data-player-echo>Ваше действие: <%= action.command %></p>

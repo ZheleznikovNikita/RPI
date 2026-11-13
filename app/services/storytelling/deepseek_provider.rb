@@ -41,7 +41,7 @@ module Storytelling
         reasoning: { effort: "none" }, response_format: { type: "json_object" },
         provider: { only: [ ROUTE ], allow_fallbacks: false },
         messages: [ { role: "system", content: INSTRUCTIONS },
-          { role: "user", content: JSON.generate(payload.merge("scene" => GameController::SCENE_INTRO)) } ]
+          { role: "user", content: JSON.generate(payload) } ]
       }
       response = @transport.call(body)
       raise Error, "Provider HTTP #{response.code}" unless response.code.to_i == 200
@@ -60,7 +60,7 @@ module Storytelling
       unless result["possible"]
         text = "Действие невозможно. #{text}" unless text.start_with?("Действие невозможно.")
       end
-      memory = result["possible"] ? result.fetch("summary").strip : payload["summary"].presence || GameController::SCENE_INTRO
+      memory = result["possible"] ? result.fetch("summary").strip : payload["summary"].presence || payload["scene"].presence || StartingScenes::DEFAULT.fetch(:intro)
       { "narration" => text, "summary" => memory }
     rescue JSON::ParserError, KeyError, NoMethodError, TypeError
       raise Error, "Invalid provider response"

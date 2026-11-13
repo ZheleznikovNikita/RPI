@@ -1,8 +1,7 @@
 class GameController < ApplicationController
-  SCENE_INTRO = "Дорога тонет в тёплом тумане. Впереди — старые ворота. Как вы поступите?".freeze
-
   def show
     @game_session = current_user&.active_game_session
+    @opening = @game_session ? { title: @game_session.title, intro: @game_session.opening_scene } : preview_opening
     @story_actions = @game_session ? @game_session.player_actions.completed.includes(:story_turns).to_a : []
     @inventory_items = @game_session ? @game_session.inventory.inventory_items.order(:name).to_a : []
   end
@@ -27,7 +26,8 @@ class GameController < ApplicationController
         redirect_to new_game_path, alert: "Подтвердите замену текущего прохождения."
         return
       end
-      current_user.start_game_session!(title: "У старых ворот")
+      current_user.start_game_session!(opening: preview_opening)
+      session.delete(:opening_scene_index)
     end
 
     redirect_to game_path, status: :see_other
@@ -68,7 +68,8 @@ class GameController < ApplicationController
 
     if current_user && !game
       current_user.with_lock do
-        game = current_user.reload.active_game_session || current_user.start_game_session!(title: "У старых ворот")
+        game = current_user.reload.active_game_session || current_user.start_game_session!(opening: preview_opening)
+        session.delete(:opening_scene_index)
       end
     end
 
@@ -79,6 +80,15 @@ class GameController < ApplicationController
   end
 
   private
+
+  def preview_opening
+    index = session[:opening_scene_index]
+    unless index.is_a?(Integer) && index.between?(0, StartingScenes::SCENES.length - 1)
+      index = Random.rand(StartingScenes::SCENES.length)
+      session[:opening_scene_index] = index
+    end
+    StartingScenes::SCENES.fetch(index)
+  end
 
   def respond_to_command(status:, text:, http_status:, game: nil)
     respond_to do |format|

@@ -10,6 +10,8 @@ class GameSession < ApplicationRecord
 
   enum :status, { active: "active", completed: "completed" }, validate: true
   validates :title, presence: true, length: { maximum: 120 }
+  validates :opening_scene, presence: true, length: { maximum: 2000 }
+  attr_readonly :opening_scene
   validates :user_id, uniqueness: { conditions: -> { active } }, if: :active?
   validates :health, :stamina, numericality: { only_integer: true, in: 0..100 }
   validates :completed_at, presence: true, if: :completed?

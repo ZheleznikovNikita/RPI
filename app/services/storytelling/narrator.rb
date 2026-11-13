@@ -35,7 +35,8 @@ module Storytelling
           { "command" => previous.command, "narration" => previous.story_turn&.narration }
         end
         request = action.request_ai!(purpose: "narration", provider: @provider.name, model_identifier: @provider.model_identifier,
-          payload: { "command" => command, "summary" => game.summary, "history" => history })
+          payload: { "command" => command, "summary" => game.summary, "history" => history,
+            "scene" => game.opening_scene, "scene_title" => game.title })
         [ action, request ]
       end
     end

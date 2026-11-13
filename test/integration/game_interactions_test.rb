@@ -50,7 +50,7 @@ class GameInteractionsTest < ActionDispatch::IntegrationTest
     assert_select ".stat-row strong", text: "56"
     assert_select ".inventory-slot-filled strong", "Старый ключ"
     assert_select ".inventory-slot-filled span", "× 2"
-    assert_select "[data-scene-text]", GameController::SCENE_INTRO
+    assert_select "[data-scene-text]", game.opening_scene
     assert_select ".story-entry [data-story-text]", count: 3, text: /нейросеть не подключена/
     assert_select ".story-entry [data-player-echo]" do |entries|
       assert_equal [ "Ваше действие: Осмотреть ворота 1", "Ваше действие: Осмотреть ворота 2", "Ваше действие: Осмотреть ворота 3" ], entries.map(&:text)

@@ -7,6 +7,9 @@ Rails.application.configure do
     config.force_ssl = true
     config.ssl_options = { redirect: { exclude: ->(request) { request.path == "/up" } } }
     config.hosts = [ "127.0.0.1", "localhost", ".localhost.run", ".lhr.life", ".pinggy.link", ".pinggy-free.link", ".free.pinggy.net" ]
+    config.action_dispatch.default_headers["X-RPI-Demo-Mode"] = "https-tunnel"
+  elsif ENV["RPI_LOCAL_DEMO"] == "1"
+    config.hosts = [ "127.0.0.1", "localhost" ]
   end
   # Settings specified here will take precedence over those in config/application.rb.
 

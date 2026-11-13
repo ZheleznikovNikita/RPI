@@ -57,4 +57,29 @@ class Storytelling::DeepseekProviderTest < ActiveSupport::TestCase
     assert_equal "completed", Storytelling::Narrator.new(provider: provider).call(command: "Постучать", game_session: game).status
     assert_equal "Путник встретил стража.", game.summary
   end
+
+  test "HTTP diagnostics retain status but never log or persist upstream secrets" do
+    response = Response.new("400", JSON.generate(error: { message: "Unsupported parameter; pza_secret-value sk-private-value" }))
+    provider = Storytelling::DeepseekProvider.new(api_key: "pza_secret-value", transport: ->(_) { response })
+    error = assert_raises(Storytelling::DeepseekProvider::Error) { provider.call(payload: {}) }
+    assert_equal "http_400", error.diagnostic_code
+    assert_includes error.detail, "Unsupported parameter"
+    assert_not_includes error.detail, "pza_secret-value"
+    assert_not_includes error.detail, "sk-private-value"
+    game = create_game_session
+    result = Storytelling::Narrator.new(provider: provider).call(command: "Идти", game_session: game)
+    assert_equal Storytelling::Narrator::ERROR_MESSAGE, result.text
+    assert_includes game.ai_requests.sole.error_message, "http_400"
+    assert_not_includes game.ai_requests.sole.error_message, "Unsupported parameter"
+    assert_not_includes game.ai_requests.sole.error_message, "secret-value"
+  end
+
+  test "network diagnostics distinguish TLS errors and timeouts without exposing raw exceptions" do
+    [ [ OpenSSL::SSL::SSLError, "tls_error" ], [ Net::ReadTimeout, "network_timeout" ], [ SocketError, "dns_error" ] ].each do |exception, code|
+      provider = Storytelling::DeepseekProvider.new(api_key: "fake", transport: ->(_) { raise exception, "private-details" })
+      error = assert_raises(Storytelling::DeepseekProvider::Error) { provider.call(payload: {}) }
+      assert_equal code, error.diagnostic_code
+      assert_not_includes error.message, "private-details"
+    end
+  end
 end

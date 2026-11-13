@@ -1,7 +1,8 @@
 param(
     [ValidateSet('server', 'tunnel')][string]$Mode = 'server',
     [ValidateSet('localhost.run', 'pinggy')][string]$Provider = 'localhost.run',
-    [ValidateRange(1024, 65535)][int]$Port = 3002
+    [ValidateRange(1024, 65535)][int]$Port = 3002,
+    [switch]$Local
 )
 
 $ErrorActionPreference = 'Stop'
@@ -9,10 +10,12 @@ $projectRoot = Split-Path -Parent $PSScriptRoot
 Push-Location $projectRoot
 $savedEnvironment = @{}
 try {
+    if ($Local -and $Mode -eq 'tunnel') { throw '-Local is only for the server; do not expose local HTTP mode through a tunnel.' }
     if ($Mode -eq 'tunnel') {
         Get-Command ssh -ErrorAction Stop | Out-Null
         $health = Invoke-WebRequest -UseBasicParsing -Uri "http://127.0.0.1:$Port/up" -TimeoutSec 5
         if ($health.StatusCode -ne 200) { throw 'Start the share server first.' }
+        if ($health.Headers['X-RPI-Demo-Mode'] -ne 'https-tunnel') { throw 'The server is not in HTTPS tunnel mode. Restart it without -Local before opening a tunnel.' }
         # Keep provider host keys separate from the user's SSH configuration.
         New-Item -ItemType Directory -Force -Path tmp | Out-Null
         $knownHosts = Join-Path $projectRoot 'tmp/share-known-hosts'
@@ -37,7 +40,8 @@ try {
         }
         $variables = @{
             RAILS_ENV = 'production'
-            RPI_PUBLIC_TUNNEL = '1'
+            RPI_PUBLIC_TUNNEL = $(if ($Local) { '0' } else { '1' })
+            RPI_LOCAL_DEMO = $(if ($Local) { '1' } else { '0' })
             SECRET_KEY_BASE = (Get-Content -LiteralPath $secretFile -Raw).Trim()
             RAILS_SERVE_STATIC_FILES = '1'
             # Puma uses 0 workers for single-process mode (Windows has no fork).
@@ -50,7 +54,12 @@ try {
         }
         & ruby bin/rails db:prepare assets:precompile
         if ($LASTEXITCODE -ne 0) { throw 'Database/assets preparation failed.' }
-        Write-Host "Ready to start. In another PowerShell: .\script\share.ps1 -Mode tunnel -Port $Port"
+        if ($Local) {
+            Write-Host "Local HTTP demo: open http://127.0.0.1:$Port . Do not start a tunnel in this mode."
+        } else {
+            Write-Host "Ready to start. In another PowerShell: .\script\share.ps1 -Mode tunnel -Port $Port"
+            Write-Host 'Use the public HTTPS link on this PC too. Local HTTP is only for /up health checks.'
+        }
         Write-Host 'This uses storage/production*.sqlite3, not your development save. Ctrl+C stops Rails.'
         & ruby bin/rails server -e production -b 127.0.0.1 -p $Port -P tmp/pids/share.pid
         if ($LASTEXITCODE -ne 0) { throw "Rails exited with code $LASTEXITCODE" }

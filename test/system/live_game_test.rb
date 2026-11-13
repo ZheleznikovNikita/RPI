@@ -15,7 +15,15 @@ class LiveGameSystemTest < ApplicationSystemTestCase
     within_window(@second) do
       visit game_path
       assert_selector "turbo-cable-stream-source[connected]", visible: :all
-      page.execute_script("window.rpiDocumentMarker = 'same-document'; document.querySelector('turbo-cable-stream-source').addEventListener('message', function(event) { window.lastStreamMessage = event.data; })")
+      page.execute_script(<<~JS)
+        window.rpiDocumentMarker = 'same-document';
+        document.querySelector('turbo-cable-stream-source').addEventListener('message', function(event) {
+          if (event.data.includes('нейросеть не подключена')) {
+            window.completedStreamMessage = event.data;
+            this.dataset.completedMessage = 'true';
+          }
+        });
+      JS
     end
   end
 
@@ -36,7 +44,10 @@ class LiveGameSystemTest < ApplicationSystemTestCase
     end
     within_window(@second) do
       assert_equal "same-document", page.evaluate_script("window.rpiDocumentMarker")
-      assert_includes page.evaluate_script("window.lastStreamMessage"), "нейросеть не подключена"
+      # A delayed pending broadcast may arrive after the completion broadcast.
+      # Wait for the actual completed WS message, independently of DOM recovery GETs.
+      assert_selector 'turbo-cable-stream-source[data-completed-message="true"]', visible: :all
+      assert_includes page.evaluate_script("window.completedStreamMessage"), "нейросеть не подключена"
     end
     assert_equal 1, @game.story_turns.count
   end

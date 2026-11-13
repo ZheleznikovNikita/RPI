@@ -6,7 +6,15 @@ module Storytelling
     ENDPOINT = URI("https://polza.ai/api/v1/chat/completions")
     MODEL = "deepseek/deepseek-v4-flash".freeze
     ROUTE = "gmicloud/fp8".freeze
-    class Error < StandardError; end
+    class Error < StandardError
+      attr_reader :diagnostic_code, :detail
+
+      def initialize(code, detail: nil)
+        @diagnostic_code = code
+        @detail = detail
+        super("Polza: #{code}")
+      end
+    end
 
     INSTRUCTIONS = <<~TEXT.freeze
       Ты рассказчик русскоязычной текстовой RPG в оригинальном мире средневекового
@@ -44,17 +52,19 @@ module Storytelling
           { role: "user", content: JSON.generate(payload) } ]
       }
       response = @transport.call(body)
-      raise Error, "Provider HTTP #{response.code}" unless response.code.to_i == 200
+      unless response.code.to_i == 200
+        raise Error.new("http_#{response.code.to_i}", detail: safe_error_detail(response.body))
+      end
 
       envelope = JSON.parse(response.body)
       choice = envelope.fetch("choices").first
-      raise Error, "Incomplete provider response" unless choice.fetch("finish_reason") == "stop"
+      raise Error, "incomplete_response" unless choice.fetch("finish_reason") == "stop"
 
       result = JSON.parse(choice.fetch("message").fetch("content"))
       unless result.is_a?(Hash) && [ true, false ].include?(result["possible"]) &&
           result["narration"].is_a?(String) && result["narration"].strip.present? && result["narration"].length <= 900 &&
           result["summary"].is_a?(String) && result["summary"].strip.present? && result["summary"].length <= 1800
-        raise Error, "Invalid provider contract"
+        raise Error, "invalid_contract"
       end
       text = result.fetch("narration").strip
       unless result["possible"]
@@ -63,10 +73,31 @@ module Storytelling
       memory = result["possible"] ? result.fetch("summary").strip : payload["summary"].presence || payload["scene"].presence || StartingScenes::DEFAULT.fetch(:intro)
       { "narration" => text, "summary" => memory }
     rescue JSON::ParserError, KeyError, NoMethodError, TypeError
-      raise Error, "Invalid provider response"
+      raise Error, "invalid_response"
+    rescue Net::OpenTimeout, Net::ReadTimeout, Net::WriteTimeout
+      raise Error, "network_timeout"
+    rescue OpenSSL::SSL::SSLError
+      raise Error, "tls_error"
+    rescue SocketError
+      raise Error, "dns_error"
+    rescue SystemCallError
+      raise Error, "connection_error"
     end
 
     private
+
+    # Optional CLI diagnostics only. Never persist/log upstream bodies or this detail.
+    def safe_error_detail(body)
+      parsed = JSON.parse(body)
+      error = parsed["error"] if parsed.is_a?(Hash)
+      message = error.is_a?(Hash) ? error["message"] : error
+      return unless message.is_a?(String)
+
+      message = message.gsub(@api_key, "[FILTERED]") if @api_key.present?
+      message.gsub(/(?:pza_|sk-)[A-Za-z0-9_-]+/, "[FILTERED]").gsub(/[[:cntrl:]]/, " ").slice(0, 500)
+    rescue JSON::ParserError
+      nil
+    end
 
     def send_request(body)
       request = Net::HTTP::Post.new(ENDPOINT)

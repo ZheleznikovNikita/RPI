@@ -43,8 +43,9 @@ module Storytelling
         action.game_session.touch
         Result.new(status: "completed", text: turn.narration)
       rescue StandardError => error
-        Rails.logger.error("Narration failed (#{error.class.name})")
-        reject_attempt(action, request, ERROR_MESSAGE)
+        code = error.is_a?(DeepseekProvider::Error) ? error.diagnostic_code : error.class.name
+        Rails.logger.error("Narration failed (#{code})")
+        reject_attempt(action, request, "#{ERROR_MESSAGE} [#{code}]")
         Result.new(status: "error", text: ERROR_MESSAGE)
       ensure
         LiveUpdates.broadcast(action.game_session.user)

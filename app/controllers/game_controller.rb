@@ -1,6 +1,10 @@
 class GameController < ApplicationController
   def show
     @game_session = current_user&.active_game_session
+    if !@game_session && current_user && Storytelling::LiveUpdates.snapshot_game(current_user)&.completed?
+      redirect_to statistics_path(from: "finished_game")
+      return
+    end
     @opening = @game_session ? { title: @game_session.title, intro: @game_session.opening_scene } : preview_opening
     @story_actions = @game_session ? @game_session.player_actions.completed.includes(:story_turns).to_a : []
     @inventory_items = @game_session ? @game_session.inventory.inventory_items.order(:name).to_a : []
@@ -19,8 +23,8 @@ class GameController < ApplicationController
       head :unauthorized
       return
     end
-    game = current_user.game_sessions.active.first
-    Storytelling::LiveUpdates.expire_stale!(game)
+    game = Storytelling::LiveUpdates.snapshot_game(current_user)
+    Storytelling::LiveUpdates.expire_stale!(game) if game&.active?
     response.headers["Cache-Control"] = "no-store"
     render turbo_stream: turbo_stream.update("live-state", partial: "game/live_state", locals: { game: game })
   end
@@ -90,6 +94,10 @@ class GameController < ApplicationController
     end
 
     if current_user && !game
+      if Storytelling::LiveUpdates.snapshot_game(current_user)&.completed?
+        respond_to_command(status: "conflict", text: "Прохождение завершено. Начните новую игру из главного меню.", http_status: :conflict)
+        return
+      end
       current_user.with_lock do
         game = current_user.reload.active_game_session || current_user.start_game_session!(opening: preview_opening)
         session.delete(:opening_scene_index)

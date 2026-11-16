@@ -78,4 +78,25 @@ class PlayerActionTest < ActiveSupport::TestCase
       assert @action.request_ai!(purpose: purpose, provider: "test", model_identifier: "m", payload: { "prompt" => "x" }).persisted?
     end
   end
+
+  test "stats are clamped applied once and rolled back with an invalid summary" do
+    @game.update!(health: 8, stamina: 10)
+    request = successful_request(@action, response: { "narration" => "Раненый герой отступает.", "health_delta" => -15, "stamina_delta" => -25 })
+    assert_raises(ActiveRecord::RecordInvalid) { @action.complete!(request: request, summary: " ") }
+    assert_equal [ 8, 10 ], @game.reload.attributes.values_at("health", "stamina")
+    assert @action.reload.pending?
+    assert_nil @action.story_turn
+    @action.complete!(request: request, summary: "Герой ранен и истощён.")
+    assert_equal [ 0, 0 ], @game.reload.attributes.values_at("health", "stamina")
+    @action.complete!(request: request, summary: "Повтор")
+    assert_equal [ 0, 0 ], @game.reload.attributes.values_at("health", "stamina")
+    assert_equal 1, @game.story_turns.count
+  end
+
+  test "recovery cannot exceed full stats" do
+    @game.update!(health: 95, stamina: 90)
+    request = successful_request(@action, response: { "narration" => "Знахарь обработал раны, вы отдохнули.", "health_delta" => 20, "stamina_delta" => 30 })
+    @action.complete!(request: request, summary: "Герой восстановился.")
+    assert_equal [ 100, 100 ], @game.reload.attributes.values_at("health", "stamina")
+  end
 end

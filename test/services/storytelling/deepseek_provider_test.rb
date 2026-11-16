@@ -8,7 +8,7 @@ class Storytelling::DeepseekProviderTest < ActiveSupport::TestCase
   end
 
   def valid_result
-    { "possible" => true, "narration" => "Страж ждёт ответа.", "summary" => "Путник встретил стража." }
+    { "possible" => true, "narration" => "Страж ждёт ответа.", "summary" => "Путник встретил стража.", "health_delta" => 0, "stamina_delta" => 0, "requires_exertion" => false }
   end
 
   test "request selects Polza model and exact provider without forwarding credentials or user instructions as system" do
@@ -81,5 +81,40 @@ class Storytelling::DeepseekProviderTest < ActiveSupport::TestCase
       assert_equal code, error.diagnostic_code
       assert_not_includes error.message, "private-details"
     end
+  end
+
+  test "combat changes survive the adapter but impossible actions cannot change stats" do
+    combat = valid_result.merge("health_delta" => -12, "stamina_delta" => -20)
+    provider = Storytelling::DeepseekProvider.new(api_key: "fake", transport: ->(_) { reply(combat) })
+    result = provider.call(payload: {})
+    assert_equal(-12, result["health_delta"])
+    assert_equal(-20, result["stamina_delta"])
+    provider = Storytelling::DeepseekProvider.new(api_key: "fake", transport: ->(_) { reply(combat.merge("possible" => false)) })
+    result = provider.call(payload: {})
+    assert_equal 0, result["health_delta"]
+    assert_equal 0, result["stamina_delta"]
+  end
+
+  test "Polza must return both bounded integer changes" do
+    [ valid_result.except("health_delta", "stamina_delta"), valid_result.except("stamina_delta"),
+      valid_result.merge("health_delta" => -100), valid_result.merge("stamina_delta" => "-10") ].each do |result|
+      provider = Storytelling::DeepseekProvider.new(api_key: "fake", transport: ->(_) { reply(result) })
+      error = assert_raises(Storytelling::DeepseekProvider::Error) { provider.call(payload: {}) }
+      assert_equal "invalid_contract", error.diagnostic_code
+    end
+  end
+
+  test "zero stamina blocks classified exertion even if model claims success but allows rest" do
+    exertion = valid_result.merge("requires_exertion" => true, "health_delta" => 10, "stamina_delta" => -10)
+    provider = Storytelling::DeepseekProvider.new(api_key: "fake", transport: ->(_) { reply(exertion) })
+    result = provider.call(payload: { "player_stats" => { "stamina" => 0 }, "summary" => "Герой истощён." })
+    assert_includes result["narration"], "Действие невозможно."
+    assert_equal "Герой истощён.", result["summary"]
+    assert_equal [ 0, 0 ], result.values_at("health_delta", "stamina_delta")
+    rested = valid_result.merge("stamina_delta" => 30)
+    provider = Storytelling::DeepseekProvider.new(api_key: "fake", transport: ->(_) { reply(rested) })
+    assert_equal 30, provider.call(payload: { "player_stats" => { "stamina" => 0 } })["stamina_delta"]
+    provider = Storytelling::DeepseekProvider.new(api_key: "fake", transport: ->(_) { reply(valid_result.except("requires_exertion")) })
+    assert_raises(Storytelling::DeepseekProvider::Error) { provider.call(payload: {}) }
   end
 end

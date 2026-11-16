@@ -62,7 +62,8 @@ module Storytelling
         end
         request = action.request_ai!(purpose: "narration", provider: @provider.name, model_identifier: @provider.model_identifier,
           payload: { "command" => command, "summary" => game.summary, "history" => history,
-            "scene" => game.opening_scene, "scene_title" => game.title })
+            "scene" => game.opening_scene, "scene_title" => game.title,
+            "player_stats" => { "health" => game.health, "stamina" => game.stamina } })
         game.touch
         [ action, request ]
       end
@@ -72,6 +73,7 @@ module Storytelling
       unless response.is_a?(Hash) && %w[narration summary].all? { |key| response[key].is_a?(String) && response[key].present? && response[key].length <= 20_000 }
         raise ArgumentError, "Invalid narrator response"
       end
+      StatChanges.parse(response)
     end
 
     def reject_attempt(action, request, message)

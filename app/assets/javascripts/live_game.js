@@ -103,6 +103,8 @@
         await render(stream);
         var current = document.querySelector('#live-state [data-live-snapshot]');
         if (current) update(current);
+        var gameOver = document.querySelector('#live-state [data-game-over]');
+        if (gameOver) { ended = true; controls(); window.location.assign(gameOver.dataset.redirectUrl); }
       };
     });
     async function sync() {

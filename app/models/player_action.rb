@@ -31,8 +31,12 @@ class PlayerAction < ApplicationRecord
       ensure_pending!
       narration = source.response_payload["narration"] if source.response_payload.is_a?(Hash)
       turn = source.create_story_turn!(narration: narration)
+      changes = Storytelling::StatChanges.parse(source.response_payload)
       update!(status: :completed)
       game_session.add_summary!(content: summary, through_position: position)
+      game_session.update!(health: (game_session.health + changes.fetch("health_delta")).clamp(0, 100),
+        stamina: (game_session.stamina + changes.fetch("stamina_delta")).clamp(0, 100))
+      game_session.finish! if game_session.health.zero?
       turn
     end
   end

@@ -85,6 +85,60 @@ class LiveGameSystemTest < ApplicationSystemTestCase
     end
   end
 
+  test "story stat changes update numbers and bars in both tabs" do
+    previous_provider = Rails.configuration.x.narration_provider
+    provider = Object.new
+    def provider.name = "stats-test"
+    def provider.model_identifier = "stub"
+    def provider.call(payload:)
+      { "narration" => "Стрела задела плечо, вы скрылись за стеной.", "summary" => "Герой ранен и укрылся.", "health_delta" => -12, "stamina_delta" => -15 }
+    end
+    Rails.configuration.x.narration_provider = provider
+    within_window(@first) do
+      fill_in "Команда игрока", with: "Добежать до укрытия"
+      click_button "Отправить"
+      assert_text "Рассказчик готовит ответ"
+    end
+    perform_enqueued_jobs
+    [ @first, @second ].each do |window|
+      within_window(window) do
+        assert_selector ".stat-row:first-child strong", exact_text: "88"
+        assert_selector ".stat-row:last-child strong", exact_text: "85"
+        assert_selector '.stat-row:first-child .bar i[style*="88%"]'
+        assert_selector '.stat-row:last-child .bar i[style*="85%"]'
+      end
+    end
+  ensure
+    Rails.configuration.x.narration_provider = previous_provider
+  end
+
+  test "zero health sends both tabs to statistics with a main menu back link" do
+    @game.update!(health: 5)
+    previous_provider = Rails.configuration.x.narration_provider
+    provider = Object.new
+    def provider.name = "stats-test"
+    def provider.model_identifier = "stub"
+    def provider.call(payload:)
+      { "narration" => "Последний удар сразил героя.", "summary" => "Герой пал в бою.", "health_delta" => -12, "stamina_delta" => -15 }
+    end
+    Rails.configuration.x.narration_provider = provider
+    within_window(@first) do
+      fill_in "Команда игрока", with: "Отступить"
+      click_button "Отправить"
+      assert_text "Рассказчик готовит ответ"
+    end
+    perform_enqueued_jobs
+    [ @first, @second ].each do |window|
+      within_window(window) do
+        assert_current_path statistics_path(from: "finished_game")
+        assert_selector 'a[href="/"]'
+      end
+    end
+    assert @game.reload.completed?
+  ensure
+    Rails.configuration.x.narration_provider = previous_provider
+  end
+
   test "a delayed older stream cannot replace a newer pending state" do
     within_window(@first) do
       page.execute_script(<<~JS)

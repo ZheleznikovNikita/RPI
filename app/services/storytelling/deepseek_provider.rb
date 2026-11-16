@@ -28,11 +28,27 @@ module Storytelling
       невозможные действия и создание предметов/сил из ничего. Магия допустима лишь
       при ранее установленном навыке и соблюдении ограничений сцены. Обычная неудача
       допустимого действия не означает impossible. Не выдумывай успех невозможного.
-      Верни только JSON с полями possible (boolean), narration (string), summary (string).
+      Верни только JSON с полями possible (boolean), narration (string), summary (string),
+      health_delta (целое от -30 до 20), stamina_delta (целое от -40 до 30),
+      requires_exertion (boolean: требует ли попытка физического усилия).
+      player_stats содержит реальные текущие HP и STA (0–100). Возвращай изменения,
+      а не итоговые значения. В обычном разговоре/осмотре изменения равны 0.
+      Меняй показатели лишь за последствия, описанные в narration: ранение/удар
+      уменьшает HP, бой/бег/побег/тяжёлая работа расходуют STA. Само упоминание боя
+      не означает ранение. Обычный бег стоит 5–15 STA, напряжённый бой 10–25 STA;
+      соизмеряй цену с результатом и текущим состоянием. Не расходуй больше остатка.
+      Отдых восстанавливает STA, лечение/безопасное длительное восстановление — HP;
+      восстановление должно следовать из сюжета, а не происходить каждый ход.
+      При STA=0 активный бой/бег невозможен, предложи отдых или иное действие без
+      нагрузки: possible=false, обе delta=0. Силовые удары, бег, прыжки, перенос
+      тяжестей и силовое освобождение требуют requires_exertion=true, даже если
+      игрок просит не тратить силы. Разговор, ожидание, осмотр и отдых обычно false.
+      Если последствия обнуляют HP, опиши поражение: прохождение завершается.
+      Не меняй инвентарь и не утверждай получение или расход предметов как механику.
       При possible=false narration начинается с «Действие невозможно.» и кратко
-      объясняет причину; мир не меняется. При possible=true summary обновляет краткую
+      объясняет причину; мир не меняется и обе delta равны 0. При possible=true summary обновляет краткую
       память всей истории, включая важные прежние факты, до 1200 символов.
-      Пример JSON: {"possible":true,"narration":"Страж приоткрывает ворота и просит назвать себя.","summary":"Путник у ворот крепости. Страж ждёт его имени."}
+      Пример JSON: {"possible":true,"narration":"Страж приоткрывает ворота и просит назвать себя.","summary":"Путник у ворот крепости. Страж ждёт его имени.","health_delta":0,"stamina_delta":0,"requires_exertion":false}
     TEXT
 
     def initialize(api_key:, transport: nil)
@@ -61,17 +77,27 @@ module Storytelling
       raise Error, "incomplete_response" unless choice.fetch("finish_reason") == "stop"
 
       result = JSON.parse(choice.fetch("message").fetch("content"))
-      unless result.is_a?(Hash) && [ true, false ].include?(result["possible"]) &&
+      unless result.is_a?(Hash) && [ true, false ].include?(result["possible"]) && [ true, false ].include?(result["requires_exertion"]) &&
           result["narration"].is_a?(String) && result["narration"].strip.present? && result["narration"].length <= 900 &&
           result["summary"].is_a?(String) && result["summary"].strip.present? && result["summary"].length <= 1800
         raise Error, "invalid_contract"
       end
+      begin
+        changes = StatChanges.parse(result, required: true)
+      rescue ArgumentError
+        raise Error, "invalid_contract"
+      end
       text = result.fetch("narration").strip
+      if payload.dig("player_stats", "stamina") == 0 && result["requires_exertion"]
+        result["possible"] = false
+        text = "Действие невозможно. Вы истощены: для физического усилия сначала нужно отдохнуть."
+      end
       unless result["possible"]
         text = "Действие невозможно. #{text}" unless text.start_with?("Действие невозможно.")
       end
       memory = result["possible"] ? result.fetch("summary").strip : payload["summary"].presence || payload["scene"].presence || StartingScenes::DEFAULT.fetch(:intro)
-      { "narration" => text, "summary" => memory }
+      changes = changes.transform_values { 0 } unless result["possible"]
+      { "narration" => text, "summary" => memory }.merge(changes)
     rescue JSON::ParserError, KeyError, NoMethodError, TypeError
       raise Error, "invalid_response"
     rescue Net::OpenTimeout, Net::ReadTimeout, Net::WriteTimeout

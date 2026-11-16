@@ -1,11 +1,19 @@
 module Storytelling
   class LiveUpdates
     def self.broadcast(user)
-      game = user.game_sessions.active.first
+      game = snapshot_game(user)
       Turbo::StreamsChannel.broadcast_update_to("private_game_user_#{user.id}", target: "live-state",
         partial: "game/live_state", locals: { game: game })
     rescue StandardError => error
       Rails.logger.warn("Game broadcast failed (#{error.class.name})")
+    end
+
+    def self.snapshot_game(user)
+      active = user.game_sessions.active.first
+      return active if active
+
+      latest = user.game_sessions.order(id: :desc).first
+      latest if latest&.completed? && latest.health.zero?
     end
 
     def self.expire_stale!(game)

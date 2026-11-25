@@ -6,8 +6,8 @@ on:
     branches: [ main ]
 
 jobs:
-  # Ruby 4.0.1 has prebuilt binaries for 24.04, but not for 26.04.
   # Pin the runner so ubuntu-latest migrations cannot break Ruby setup.
+  # .ruby-version selects the security-patched Ruby used by every Ruby job.
   scan_ruby:
     runs-on: ubuntu-24.04
 

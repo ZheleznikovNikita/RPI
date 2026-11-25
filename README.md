@@ -3,7 +3,7 @@
   <h1>RPI</h1>
   <p><strong>Текстовая RPG с будущим ИИ-рассказчиком</strong></p>
   <p>Ваши решения. Новые пути. История, которая помнит пройденное.</p>
-  <p><kbd>Ruby 4.0.1</kbd> · <kbd>Rails 8.1</kbd> · <kbd>SQLite</kbd> · <kbd>Прототип</kbd></p>
+  <p><kbd>Ruby 4.0.10</kbd> · <kbd>Rails 8.1</kbd> · <kbd>SQLite</kbd> · <kbd>Прототип</kbd></p>
 </div>
 
 ---
@@ -183,7 +183,7 @@ ruby bin/rails zeitwerk:check
 
 Конфигурация [.github/workflows/ci.yml](.github/workflows/ci.yml) запускает пять задач при push в main и для pull request: аудит Ruby-кода и gems, проверку синтаксиса локальных JavaScript-файлов, RuboCop, Rails-тесты и браузерные системные тесты. Последние проверяют две вкладки, WebSocket, переподключение и Frame инвентаря в headless Chrome.
 
-CI закреплён на `ubuntu-24.04`: для Ruby 4.0.1 из `.ruby-version` есть готовая сборка на этом образе, а на Ubuntu 26.04 её нет. Плавающий `ubuntu-latest` может сменить версию ОС и сломать установку Ruby ещё до запуска проверок. При будущем обновлении Ruby совместимость образа нужно проверить заново.
+CI закреплён на `ubuntu-24.04`, чтобы смена `ubuntu-latest` не ломала установку Ruby. Версия в `.ruby-version` и Dockerfile — `4.0.10`, с исправлением CVE-2026-132825. После обновления проекта проверьте `ruby -v`: изменение файла не обновляет установленный Ruby автоматически. При будущем обновлении Ruby совместимость образа нужно проверить заново.
 
 В Gemfile.lock сохранены обе платформы: Windows `x64-mingw-ucrt` и Linux `x86_64-linux`. Не удаляйте Linux из lockfile при обновлении зависимостей на Windows. Добавить платформу повторно можно командой `bundle lock --add-platform x86_64-linux`; изменённый Gemfile.lock должен попасть в коммит.
 

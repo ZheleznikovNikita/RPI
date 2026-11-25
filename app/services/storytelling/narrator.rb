@@ -63,6 +63,7 @@ module Storytelling
         request = action.request_ai!(purpose: "narration", provider: @provider.name, model_identifier: @provider.model_identifier,
           payload: { "command" => command, "summary" => game.summary, "history" => history,
             "scene" => game.opening_scene, "scene_title" => game.title,
+            "music_mood" => game.current_music_mood,
             "player_stats" => { "health" => game.health, "stamina" => game.stamina } })
         game.touch
         [ action, request ]

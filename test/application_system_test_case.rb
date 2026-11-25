@@ -1,4 +1,5 @@
 require "test_helper"
+require_relative "support/chromium_storage_reset"
 
 class ApplicationSystemTestCase < ActionDispatch::SystemTestCase
   include ActiveJob::TestHelper

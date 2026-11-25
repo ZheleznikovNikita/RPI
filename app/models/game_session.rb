@@ -10,6 +10,7 @@ class GameSession < ApplicationRecord
 
   enum :status, { active: "active", completed: "completed" }, validate: true
   validates :title, presence: true, length: { maximum: 120 }
+  validates :music_mood, inclusion: { in: Storytelling::MusicMood::VALUES }
   validates :opening_scene, presence: true, length: { maximum: 2000 }
   attr_readonly :opening_scene
   validates :user_id, uniqueness: { conditions: -> { active } }, if: :active?
@@ -18,6 +19,19 @@ class GameSession < ApplicationRecord
 
   def latest_summary
     story_summaries.order(version: :desc).first
+  end
+
+  def current_music_mood(now: Time.current)
+    return "calm" if music_mood == "victory" && (!music_mood_changed_at || now >= music_mood_changed_at + Storytelling::MusicMood::VICTORY_SECONDS)
+
+    Storytelling::MusicMood.normalize(music_mood)
+  end
+
+  def music_attributes_for(response)
+    mood = Storytelling::MusicMood.normalize(response["music_mood"], fallback: current_music_mood)
+    return {} if mood == current_music_mood
+
+    { music_mood: mood, music_mood_changed_at: Time.current }
   end
 
   def summary

@@ -11,7 +11,7 @@
   <%= javascript_include_tag "game", defer: true %>
 <% end %>
 
-<main class="game-screen" aria-label="Игровой интерфейс" data-game>
+<main class="game-screen" aria-label="Игровой интерфейс" data-game data-music-mood="<%= @game_session&.current_music_mood || 'calm' %>" data-music-changed-at="<%= @game_session&.music_mood_changed_at&.iso8601(3) %>" data-music-game-id="<%= @game_session&.id || 'guest' %>">
   <% if user_signed_in? %>
     <%= turbo_stream_from :game_ui, channel: "GameChannel" %>
     <p class="visually-hidden" role="status" data-live-connection>Подключение живых обновлений…</p>

@@ -35,7 +35,8 @@ class PlayerAction < ApplicationRecord
       update!(status: :completed)
       game_session.add_summary!(content: summary, through_position: position)
       game_session.update!(health: (game_session.health + changes.fetch("health_delta")).clamp(0, 100),
-        stamina: (game_session.stamina + changes.fetch("stamina_delta")).clamp(0, 100))
+        stamina: (game_session.stamina + changes.fetch("stamina_delta")).clamp(0, 100),
+        **game_session.music_attributes_for(source.response_payload))
       game_session.finish! if game_session.health.zero?
       turn
     end

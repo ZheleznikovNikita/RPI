@@ -117,4 +117,16 @@ class Storytelling::DeepseekProviderTest < ActiveSupport::TestCase
     provider = Storytelling::DeepseekProvider.new(api_key: "fake", transport: ->(_) { reply(valid_result.except("requires_exertion")) })
     assert_raises(Storytelling::DeepseekProvider::Error) { provider.call(payload: {}) }
   end
+
+  test "music mood is returned in the existing response and unknown values preserve atmosphere" do
+    [ "calm", "battle", "tension", "mystery", "sad", "victory", "bad", nil, 1, [] ].each do |mood|
+      calls = 0
+      provider = Storytelling::DeepseekProvider.new(api_key: "fake", transport: ->(_) { calls += 1; reply(valid_result.merge("music_mood" => mood)) })
+      result = provider.call(payload: { "music_mood" => "battle" })
+      assert_equal Storytelling::MusicMood.normalize(mood, fallback: "battle"), result["music_mood"]
+      assert_equal 1, calls
+    end
+    provider = Storytelling::DeepseekProvider.new(api_key: "fake", transport: ->(_) { reply(valid_result.merge("possible" => false, "music_mood" => "victory")) })
+    assert_equal "tension", provider.call(payload: { "music_mood" => "tension" })["music_mood"]
+  end
 end

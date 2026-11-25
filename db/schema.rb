@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_13_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_25_120000) do
   create_table "ai_requests", force: :cascade do |t|
     t.integer "player_action_id", null: false
     t.string "purpose", null: false
@@ -40,9 +40,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_13_120000) do
     t.datetime "updated_at", null: false
     t.datetime "completed_at"
     t.text "opening_scene", default: "Дорога тонет в тёплом тумане. Впереди — старые ворота. Как вы поступите?", null: false
+    t.string "music_mood", default: "calm", null: false
+    t.datetime "music_mood_changed_at"
     t.index ["user_id"], name: "index_game_sessions_on_user_id"
     t.index ["user_id"], name: "one_active_game_session_per_user", unique: true, where: "status = 'active'"
     t.check_constraint "health BETWEEN 0 AND 100", name: "adventures_health_range"
+    t.check_constraint "music_mood IN ('calm', 'battle', 'tension', 'mystery', 'sad', 'victory')", name: "game_music_mood"
     t.check_constraint "stamina BETWEEN 0 AND 100", name: "adventures_stamina_range"
     t.check_constraint "status IN ('active', 'completed')", name: "adventures_status"
   end

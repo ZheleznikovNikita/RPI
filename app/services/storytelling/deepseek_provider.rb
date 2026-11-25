@@ -31,6 +31,15 @@ module Storytelling
       Верни только JSON с полями possible (boolean), narration (string), summary (string),
       health_delta (целое от -30 до 20), stamina_delta (целое от -40 до 30),
       requires_exertion (boolean: требует ли попытка физического усилия).
+      Добавь music_mood — строго одно из calm, battle, tension, mystery, sad, victory.
+      Выбирай по всей текущей сцене, памяти и истории, не только последней команде.
+      calm: спокойное путешествие/отдых/разговор; battle: активный бой или нападение;
+      tension: скрытность, угроза, ожидание опасности; mystery: магия, тайна, древние
+      руины; sad: трагедия, потеря; victory: значимая победа/крупное достижение.
+      Разговор или неудачный удар в продолжающемся бою сохраняют battle; краткая
+      пауза не означает конец угрозы. Победу не повторяй за каждую мелочь: это короткая
+      фанфара, после неё спокойный фон. Поле music_mood во входе — прежняя атмосфера.
+      При невозможном действии сохраняй прежнее music_mood: мир не изменился.
       player_stats содержит реальные текущие HP и STA (0–100). Возвращай изменения,
       а не итоговые значения. В обычном разговоре/осмотре изменения равны 0.
       Меняй показатели лишь за последствия, описанные в narration: ранение/удар
@@ -48,7 +57,7 @@ module Storytelling
       При possible=false narration начинается с «Действие невозможно.» и кратко
       объясняет причину; мир не меняется и обе delta равны 0. При possible=true summary обновляет краткую
       память всей истории, включая важные прежние факты, до 1200 символов.
-      Пример JSON: {"possible":true,"narration":"Страж приоткрывает ворота и просит назвать себя.","summary":"Путник у ворот крепости. Страж ждёт его имени.","health_delta":0,"stamina_delta":0,"requires_exertion":false}
+      Пример JSON: {"possible":true,"narration":"Страж приоткрывает ворота и просит назвать себя.","summary":"Путник у ворот крепости. Страж ждёт его имени.","health_delta":0,"stamina_delta":0,"requires_exertion":false,"music_mood":"calm"}
     TEXT
 
     def initialize(api_key:, transport: nil)
@@ -97,7 +106,8 @@ module Storytelling
       end
       memory = result["possible"] ? result.fetch("summary").strip : payload["summary"].presence || payload["scene"].presence || StartingScenes::DEFAULT.fetch(:intro)
       changes = changes.transform_values { 0 } unless result["possible"]
-      { "narration" => text, "summary" => memory }.merge(changes)
+      mood = MusicMood.normalize(result["possible"] ? result["music_mood"] : nil, fallback: payload["music_mood"])
+      { "narration" => text, "summary" => memory, "music_mood" => mood }.merge(changes)
     rescue JSON::ParserError, KeyError, NoMethodError, TypeError
       raise Error, "invalid_response"
     rescue Net::OpenTimeout, Net::ReadTimeout, Net::WriteTimeout

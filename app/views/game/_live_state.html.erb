@@ -1,6 +1,7 @@
 <% actions = game ? game.player_actions.completed.includes(:story_turns).to_a : [] %>
 <% last_request = game&.ai_requests&.reorder(id: :desc)&.first %>
 <% pending = game && game.player_actions.pending.exists? %>
+<span hidden data-music-scene data-music-mood="<%= game&.current_music_mood || 'calm' %>" data-music-changed-at="<%= game&.music_mood_changed_at&.iso8601(3) %>" data-music-game-id="<%= game&.id %>" data-music-ended="<%= game&.completed? || false %>"></span>
 <% if game&.completed? && game.health.zero? %>
   <span hidden data-game-over data-redirect-url="<%= statistics_path(from: 'finished_game') %>"></span>
 <% end %>

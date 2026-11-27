@@ -5,7 +5,7 @@ module Storytelling
   class DeepseekProvider
     ENDPOINT = URI("https://polza.ai/api/v1/chat/completions")
     MODEL = "deepseek/deepseek-v4-flash".freeze
-    ROUTE = "gmicloud/fp8".freeze
+    ROUTE = "streamlake/fp8".freeze
     class Error < StandardError
       attr_reader :diagnostic_code, :detail
 

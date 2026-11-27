@@ -9,14 +9,13 @@
     var status = form.querySelector("[data-voice-status]");
     var Engine = window.SpeechRecognition || window.webkitSpeechRecognition;
     var session = null, held = false, pointer = null;
-    var hint = "Удерживайте микрофон (или пробел), говорите и отпустите. Звук обрабатывается сервисом браузера.";
 
     function refresh() {
       var empty = input.value.length === 0;
       mic.hidden = !empty;
       send.hidden = empty;
       mic.disabled = !Engine || input.readOnly || send.disabled;
-      if (!session) status.textContent = empty ? (Engine ? hint : "Голосовой ввод недоступен в этом браузере. Введите команду текстом.") : "";
+      if (!session) status.textContent = empty && !Engine ? "Голосовой ввод недоступен в этом браузере. Введите команду текстом." : "";
       if (session && (input.readOnly || send.disabled || !empty)) cancel();
     }
     function cancel() {

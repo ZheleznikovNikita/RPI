@@ -47,7 +47,7 @@ jobs:
           done
 
       - name: Test adaptive music scheduling and lifecycle
-        run: node --test test/javascript/music_test.cjs
+        run: node --test test/javascript/*_test.cjs
 
   lint:
     runs-on: ubuntu-24.04

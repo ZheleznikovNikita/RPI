@@ -1097,3 +1097,6 @@ h1 {
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation: none !important; transition: none !important; }
 }
+.voice-button { min-width: 44px; min-height: 44px; touch-action: none; user-select: none; -webkit-user-select: none; }
+.voice-button.is-recording { background: #a32935; outline: 2px solid currentColor; outline-offset: 2px; }
+[data-voice-input][hidden], [data-send-command][hidden] { display: none; }

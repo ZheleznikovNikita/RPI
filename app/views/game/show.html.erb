@@ -9,6 +9,7 @@
   <%= javascript_include_tag "game_menu", defer: true %>
   <%= javascript_include_tag "music", defer: true %>
   <%= javascript_include_tag "game", defer: true %>
+  <%= javascript_include_tag "voice_input", defer: true %>
 <% end %>
 
 <main class="game-screen" aria-label="Игровой интерфейс" data-game data-music-mood="<%= @game_session&.current_music_mood || 'calm' %>" data-music-changed-at="<%= @game_session&.music_mood_changed_at&.iso8601(3) %>" data-music-game-id="<%= @game_session&.id || 'guest' %>">
@@ -89,7 +90,11 @@
       <div class="command-row">
         <%= form.text_field :command, id: "player-command", placeholder: "например: осмотреть ворота", autocomplete: "off", maxlength: 2000, required: true, aria: { describedby: "command-feedback" } %>
         <%= form.button "Отправить", class: "btn btn-primary", data: { send_command: true } %>
+        <button type="button" class="btn btn-primary voice-button" data-voice-input hidden aria-label="Удерживайте для голосового ввода" aria-pressed="false" aria-describedby="voice-status">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10v2a7 7 0 0 0 14 0v-2M12 19v3M8 22h8"/></svg>
+        </button>
       </div>
+      <p id="voice-status" class="command-feedback" role="status" data-voice-status></p>
       <p id="command-feedback" class="command-feedback <%= "is-error" if command_error.present? %>" role="status" data-default-feedback="<%= command_hint %>" <%= "hidden" if command_error.blank? && (@story_actions.any? || flash[:story_feedback_status] == "completed") %>><%= command_error.presence || command_hint %></p>
     <% end %>
   </section>
